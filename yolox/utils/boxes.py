@@ -33,13 +33,20 @@ def filter_box(output, scale_range):
 
 
 def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agnostic=False):
+    # Constants for output format
+    POLYGON_COORDS = 8
+    MIN_POLYGON_OUTPUT_CHANNELS = POLYGON_COORDS + 1  # polygon coords + objectness
+    OBJ_CONF_IDX = -3  # Index for objectness confidence in detection output
+    CLS_CONF_IDX = -2  # Index for class confidence in detection output
+    CLS_ID_IDX = -1    # Index for class ID in detection output
+    
     # Check if we have polygon format (8 values) or traditional format (4 values)
-    is_polygon = prediction.shape[2] >= 9  # 8 for bbox + at least 1 for obj
+    is_polygon = prediction.shape[2] >= MIN_POLYGON_OUTPUT_CHANNELS
     
     if is_polygon:
         # Convert polygon to xyxy for NMS
         box_corner = prediction.new(prediction.shape[0], prediction.shape[1], 4)
-        polygons = prediction[:, :, :8]
+        polygons = prediction[:, :, :POLYGON_COORDS]
         x_coords = polygons[:, :, [0, 2, 4, 6]]
         y_coords = polygons[:, :, [1, 3, 5, 7]]
         box_corner[:, :, 0] = torch.min(x_coords, dim=2)[0]
@@ -47,7 +54,7 @@ def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agn
         box_corner[:, :, 2] = torch.max(x_coords, dim=2)[0]
         box_corner[:, :, 3] = torch.max(y_coords, dim=2)[0]
         # Create new prediction with xyxy boxes
-        prediction_nms = torch.cat([box_corner, prediction[:, :, 8:]], dim=2)
+        prediction_nms = torch.cat([box_corner, prediction[:, :, POLYGON_COORDS:]], dim=2)
         obj_start_idx = 4
         cls_start_idx = 5
         bbox_size = 4
@@ -77,7 +84,7 @@ def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agn
         if is_polygon:
             # For polygon, return original polygon coordinates with scores
             orig_pred = prediction[i]
-            detections = torch.cat((orig_pred[:, :8], image_pred[:, 4:5], class_conf, class_pred.float()), 1)
+            detections = torch.cat((orig_pred[:, :POLYGON_COORDS], image_pred[:, 4:5], class_conf, class_pred.float()), 1)
             detections = detections[conf_mask]
             # For NMS, use xyxy boxes
             nms_boxes = image_pred[conf_mask, :4]
@@ -93,14 +100,14 @@ def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agn
         if class_agnostic:
             nms_out_index = torchvision.ops.nms(
                 nms_boxes,
-                detections[:, -3] * detections[:, -2],
+                detections[:, OBJ_CONF_IDX] * detections[:, CLS_CONF_IDX],
                 nms_thre,
             )
         else:
             nms_out_index = torchvision.ops.batched_nms(
                 nms_boxes,
-                detections[:, -3] * detections[:, -2],
-                detections[:, -1],
+                detections[:, OBJ_CONF_IDX] * detections[:, CLS_CONF_IDX],
+                detections[:, CLS_ID_IDX],
                 nms_thre,
             )
 

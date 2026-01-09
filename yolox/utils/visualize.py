@@ -34,9 +34,11 @@ def vis(img, boxes, scores, cls_ids, conf=0.5, class_names=None):
             points = points.reshape((-1, 1, 2))
             cv2.polylines(img, [points], True, color, 2)
             
-            # Use top-left point for text
-            x0 = int(box[0])
-            y0 = int(box[1])
+            # Use top-left corner of bounding box for text positioning
+            x_coords = [int(box[0]), int(box[2]), int(box[4]), int(box[6])]
+            y_coords = [int(box[1]), int(box[3]), int(box[5]), int(box[7])]
+            x0 = min(x_coords)
+            y0 = min(y_coords)
         else:
             # Traditional bbox format
             x0 = int(box[0])

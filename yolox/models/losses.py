@@ -5,6 +5,9 @@
 import torch
 import torch.nn as nn
 
+# Constants
+POLYGON_COORDS = 8  # Number of values in polygon format (4 points with x,y each)
+
 
 class IOUloss(nn.Module):
     def __init__(self, reduction="none", loss_type="iou"):
@@ -19,7 +22,7 @@ class IOUloss(nn.Module):
         target = target.view(-1, target.shape[-1])
         
         # Handle polygon format (8 values) - convert to bounding box for IoU calculation
-        if pred.shape[1] == 8:
+        if pred.shape[1] == POLYGON_COORDS:
             # Convert polygon to center-based representation for IoU
             # Calculate bounding box from polygon points
             pred_x_coords = pred[:, [0, 2, 4, 6]]
