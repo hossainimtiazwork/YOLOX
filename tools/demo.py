@@ -172,13 +172,18 @@ class Predictor(object):
             return img
         output = output.cpu()
 
-        bboxes = output[:, 0:4]
+        # Check if polygon format (8 bbox values) or traditional (4 bbox values)
+        if output.shape[1] >= 11:  # 8 bbox + obj + cls_conf + cls
+            bboxes = output[:, 0:8]
+            cls = output[:, 10]
+            scores = output[:, 8] * output[:, 9]
+        else:
+            bboxes = output[:, 0:4]
+            cls = output[:, 6]
+            scores = output[:, 4] * output[:, 5]
 
         # preprocessing: resize
         bboxes /= ratio
-
-        cls = output[:, 6]
-        scores = output[:, 4] * output[:, 5]
 
         vis_res = vis(img, bboxes, scores, cls, cls_conf, self.cls_names)
         return vis_res

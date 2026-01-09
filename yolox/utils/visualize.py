@@ -16,19 +16,36 @@ def vis(img, boxes, scores, cls_ids, conf=0.5, class_names=None):
         score = scores[i]
         if score < conf:
             continue
-        x0 = int(box[0])
-        y0 = int(box[1])
-        x1 = int(box[2])
-        y1 = int(box[3])
-
+        
         color = (_COLORS[cls_id] * 255).astype(np.uint8).tolist()
         text = '{}:{:.1f}%'.format(class_names[cls_id], score * 100)
         txt_color = (0, 0, 0) if np.mean(_COLORS[cls_id]) > 0.5 else (255, 255, 255)
         font = cv2.FONT_HERSHEY_SIMPLEX
 
-        txt_size = cv2.getTextSize(text, font, 0.4, 1)[0]
-        cv2.rectangle(img, (x0, y0), (x1, y1), color, 2)
+        # Check if this is polygon format (8 values) or traditional bbox (4 values)
+        if len(box) == 8:
+            # Polygon format: draw polygon
+            points = np.array([
+                [int(box[0]), int(box[1])],
+                [int(box[2]), int(box[3])],
+                [int(box[4]), int(box[5])],
+                [int(box[6]), int(box[7])]
+            ], np.int32)
+            points = points.reshape((-1, 1, 2))
+            cv2.polylines(img, [points], True, color, 2)
+            
+            # Use top-left point for text
+            x0 = int(box[0])
+            y0 = int(box[1])
+        else:
+            # Traditional bbox format
+            x0 = int(box[0])
+            y0 = int(box[1])
+            x1 = int(box[2])
+            y1 = int(box[3])
+            cv2.rectangle(img, (x0, y0), (x1, y1), color, 2)
 
+        txt_size = cv2.getTextSize(text, font, 0.4, 1)[0]
         txt_bk_color = (_COLORS[cls_id] * 255 * 0.7).astype(np.uint8).tolist()
         cv2.rectangle(
             img,

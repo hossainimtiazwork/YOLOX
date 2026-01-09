@@ -15,8 +15,41 @@ class IOUloss(nn.Module):
     def forward(self, pred, target):
         assert pred.shape[0] == target.shape[0]
 
-        pred = pred.view(-1, 4)
-        target = target.view(-1, 4)
+        pred = pred.view(-1, pred.shape[-1])
+        target = target.view(-1, target.shape[-1])
+        
+        # Handle polygon format (8 values) - convert to bounding box for IoU calculation
+        if pred.shape[1] == 8:
+            # Convert polygon to center-based representation for IoU
+            # Calculate bounding box from polygon points
+            pred_x_coords = pred[:, [0, 2, 4, 6]]
+            pred_y_coords = pred[:, [1, 3, 5, 7]]
+            target_x_coords = target[:, [0, 2, 4, 6]]
+            target_y_coords = target[:, [1, 3, 5, 7]]
+            
+            pred_x1 = torch.min(pred_x_coords, dim=1)[0]
+            pred_y1 = torch.min(pred_y_coords, dim=1)[0]
+            pred_x2 = torch.max(pred_x_coords, dim=1)[0]
+            pred_y2 = torch.max(pred_y_coords, dim=1)[0]
+            
+            target_x1 = torch.min(target_x_coords, dim=1)[0]
+            target_y1 = torch.min(target_y_coords, dim=1)[0]
+            target_x2 = torch.max(target_x_coords, dim=1)[0]
+            target_y2 = torch.max(target_y_coords, dim=1)[0]
+            
+            # Convert to center and size format for IoU calculation
+            pred_cx = (pred_x1 + pred_x2) / 2
+            pred_cy = (pred_y1 + pred_y2) / 2
+            pred_w = pred_x2 - pred_x1
+            pred_h = pred_y2 - pred_y1
+            pred = torch.stack([pred_cx, pred_cy, pred_w, pred_h], dim=1)
+            
+            target_cx = (target_x1 + target_x2) / 2
+            target_cy = (target_y1 + target_y2) / 2
+            target_w = target_x2 - target_x1
+            target_h = target_y2 - target_y1
+            target = torch.stack([target_cx, target_cy, target_w, target_h], dim=1)
+        
         tl = torch.max(
             (pred[:, :2] - pred[:, 2:] / 2), (target[:, :2] - target[:, 2:] / 2)
         )

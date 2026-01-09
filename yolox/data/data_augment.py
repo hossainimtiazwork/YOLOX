@@ -81,32 +81,51 @@ def get_affine_matrix(
 
 def apply_affine_to_bboxes(targets, target_size, M, scale):
     num_gts = len(targets)
-
-    # warp corner points
     twidth, theight = target_size
-    corner_points = np.ones((4 * num_gts, 3))
-    corner_points[:, :2] = targets[:, [0, 1, 2, 3, 0, 3, 2, 1]].reshape(
-        4 * num_gts, 2
-    )  # x1y1, x2y2, x1y2, x2y1
-    corner_points = corner_points @ M.T  # apply affine transform
-    corner_points = corner_points.reshape(num_gts, 8)
+    
+    # Check if polygon format (8 values) or traditional bbox format (4 values)
+    is_polygon = targets.shape[1] >= 8
+    
+    if is_polygon:
+        # For polygon format, transform all 4 corner points
+        corner_points = np.ones((4 * num_gts, 3))
+        corner_points[:, :2] = targets[:, [0, 1, 2, 3, 4, 5, 6, 7]].reshape(
+            4 * num_gts, 2
+        )  # x1y1, x2y2, x3y3, x4y4
+        corner_points = corner_points @ M.T  # apply affine transform
+        corner_points = corner_points.reshape(num_gts, 8)
+        
+        # Clip transformed points
+        corner_points[:, 0::2] = corner_points[:, 0::2].clip(0, twidth)
+        corner_points[:, 1::2] = corner_points[:, 1::2].clip(0, theight)
+        
+        targets[:, :8] = corner_points
+    else:
+        # Traditional bbox format
+        # warp corner points
+        corner_points = np.ones((4 * num_gts, 3))
+        corner_points[:, :2] = targets[:, [0, 1, 2, 3, 0, 3, 2, 1]].reshape(
+            4 * num_gts, 2
+        )  # x1y1, x2y2, x1y2, x2y1
+        corner_points = corner_points @ M.T  # apply affine transform
+        corner_points = corner_points.reshape(num_gts, 8)
 
-    # create new boxes
-    corner_xs = corner_points[:, 0::2]
-    corner_ys = corner_points[:, 1::2]
-    new_bboxes = (
-        np.concatenate(
-            (corner_xs.min(1), corner_ys.min(1), corner_xs.max(1), corner_ys.max(1))
+        # create new boxes
+        corner_xs = corner_points[:, 0::2]
+        corner_ys = corner_points[:, 1::2]
+        new_bboxes = (
+            np.concatenate(
+                (corner_xs.min(1), corner_ys.min(1), corner_xs.max(1), corner_ys.max(1))
+            )
+            .reshape(4, num_gts)
+            .T
         )
-        .reshape(4, num_gts)
-        .T
-    )
 
-    # clip boxes
-    new_bboxes[:, 0::2] = new_bboxes[:, 0::2].clip(0, twidth)
-    new_bboxes[:, 1::2] = new_bboxes[:, 1::2].clip(0, theight)
+        # clip boxes
+        new_bboxes[:, 0::2] = new_bboxes[:, 0::2].clip(0, twidth)
+        new_bboxes[:, 1::2] = new_bboxes[:, 1::2].clip(0, theight)
 
-    targets[:, :4] = new_bboxes
+        targets[:, :4] = new_bboxes
 
     return targets
 
@@ -135,7 +154,8 @@ def _mirror(image, boxes, prob=0.5):
     _, width, _ = image.shape
     if random.random() < prob:
         image = image[:, ::-1]
-        boxes[:, 0::2] = width - boxes[:, 2::-2]
+        # Mirror all x coordinates (at even indices 0, 2, 4, 6 for polygon or 0, 2 for bbox)
+        boxes[:, 0::2] = width - boxes[:, 0::2]
     return image, boxes
 
 
