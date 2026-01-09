@@ -24,16 +24,19 @@ class YOLOXHead(nn.Module):
         in_channels=[256, 512, 1024],
         act="silu",
         depthwise=False,
+        use_oriented_bbox=False,
     ):
         """
         Args:
             act (str): activation type of conv. Defalut value: "silu".
             depthwise (bool): whether apply depthwise conv in conv branch. Defalut value: False.
+            use_oriented_bbox (bool): whether to use oriented bounding boxes (5 params: x, y, w, h, angle). Default value: False.
         """
         super().__init__()
 
         self.num_classes = num_classes
         self.decode_in_inference = True  # for deploy, set to False
+        self.use_oriented_bbox = use_oriented_bbox
 
         self.cls_convs = nn.ModuleList()
         self.reg_convs = nn.ModuleList()
@@ -105,7 +108,7 @@ class YOLOXHead(nn.Module):
             self.reg_preds.append(
                 nn.Conv2d(
                     in_channels=int(256 * width),
-                    out_channels=4,
+                    out_channels=5 if self.use_oriented_bbox else 4,
                     kernel_size=1,
                     stride=1,
                     padding=0,
@@ -124,7 +127,7 @@ class YOLOXHead(nn.Module):
         self.use_l1 = False
         self.l1_loss = nn.L1Loss(reduction="none")
         self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
-        self.iou_loss = IOUloss(reduction="none")
+        self.iou_loss = IOUloss(reduction="none", use_oriented_bbox=self.use_oriented_bbox)
         self.strides = strides
         self.grids = [torch.zeros(1)] * len(in_channels)
 
@@ -175,11 +178,12 @@ class YOLOXHead(nn.Module):
                 if self.use_l1:
                     batch_size = reg_output.shape[0]
                     hsize, wsize = reg_output.shape[-2:]
+                    bbox_dim = 5 if self.use_oriented_bbox else 4
                     reg_output = reg_output.view(
-                        batch_size, 1, 4, hsize, wsize
+                        batch_size, 1, bbox_dim, hsize, wsize
                     )
                     reg_output = reg_output.permute(0, 1, 3, 4, 2).reshape(
-                        batch_size, -1, 4
+                        batch_size, -1, bbox_dim
                     )
                     origin_preds.append(reg_output.clone())
 
@@ -216,7 +220,8 @@ class YOLOXHead(nn.Module):
         grid = self.grids[k]
 
         batch_size = output.shape[0]
-        n_ch = 5 + self.num_classes
+        bbox_dim = 5 if self.use_oriented_bbox else 4
+        n_ch = bbox_dim + 1 + self.num_classes
         hsize, wsize = output.shape[-2:]
         if grid.shape[2:4] != output.shape[2:4]:
             yv, xv = meshgrid([torch.arange(hsize), torch.arange(wsize)])
@@ -230,6 +235,9 @@ class YOLOXHead(nn.Module):
         grid = grid.view(1, -1, 2)
         output[..., :2] = (output[..., :2] + grid) * stride
         output[..., 2:4] = torch.exp(output[..., 2:4]) * stride
+        if self.use_oriented_bbox:
+            # Normalize angle to [-pi, pi]
+            output[..., 4:5] = torch.tanh(output[..., 4:5]) * math.pi
         return output, grid
 
     def decode_outputs(self, outputs, dtype):
@@ -245,11 +253,19 @@ class YOLOXHead(nn.Module):
         grids = torch.cat(grids, dim=1).type(dtype)
         strides = torch.cat(strides, dim=1).type(dtype)
 
-        outputs = torch.cat([
-            (outputs[..., 0:2] + grids) * strides,
-            torch.exp(outputs[..., 2:4]) * strides,
-            outputs[..., 4:]
-        ], dim=-1)
+        if self.use_oriented_bbox:
+            outputs = torch.cat([
+                (outputs[..., 0:2] + grids) * strides,
+                torch.exp(outputs[..., 2:4]) * strides,
+                torch.tanh(outputs[..., 4:5]) * math.pi,
+                outputs[..., 5:]
+            ], dim=-1)
+        else:
+            outputs = torch.cat([
+                (outputs[..., 0:2] + grids) * strides,
+                torch.exp(outputs[..., 2:4]) * strides,
+                outputs[..., 4:]
+            ], dim=-1)
         return outputs
 
     def get_losses(
@@ -263,9 +279,10 @@ class YOLOXHead(nn.Module):
         origin_preds,
         dtype,
     ):
-        bbox_preds = outputs[:, :, :4]  # [batch, n_anchors_all, 4]
-        obj_preds = outputs[:, :, 4:5]  # [batch, n_anchors_all, 1]
-        cls_preds = outputs[:, :, 5:]  # [batch, n_anchors_all, n_cls]
+        bbox_dim = 5 if self.use_oriented_bbox else 4
+        bbox_preds = outputs[:, :, :bbox_dim]  # [batch, n_anchors_all, 4 or 5]
+        obj_preds = outputs[:, :, bbox_dim:bbox_dim+1]  # [batch, n_anchors_all, 1]
+        cls_preds = outputs[:, :, bbox_dim+1:]  # [batch, n_anchors_all, n_cls]
 
         # calculate targets
         nlabel = (labels.sum(dim=2) > 0).sum(dim=1)  # number of objects
@@ -291,12 +308,14 @@ class YOLOXHead(nn.Module):
             num_gts += num_gt
             if num_gt == 0:
                 cls_target = outputs.new_zeros((0, self.num_classes))
-                reg_target = outputs.new_zeros((0, 4))
-                l1_target = outputs.new_zeros((0, 4))
+                reg_target = outputs.new_zeros((0, bbox_dim))
+                l1_target = outputs.new_zeros((0, bbox_dim))
                 obj_target = outputs.new_zeros((total_num_anchors, 1))
                 fg_mask = outputs.new_zeros(total_num_anchors).bool()
             else:
-                gt_bboxes_per_image = labels[batch_idx, :num_gt, 1:5]
+                # For oriented bbox, labels should have format [class, cx, cy, w, h, angle]
+                # For standard bbox, labels have format [class, cx, cy, w, h]
+                gt_bboxes_per_image = labels[batch_idx, :num_gt, 1:1+bbox_dim]
                 gt_classes = labels[batch_idx, :num_gt, 0]
                 bboxes_preds_per_image = bbox_preds[batch_idx]
 
@@ -360,7 +379,7 @@ class YOLOXHead(nn.Module):
                 reg_target = gt_bboxes_per_image[matched_gt_inds]
                 if self.use_l1:
                     l1_target = self.get_l1_target(
-                        outputs.new_zeros((num_fg_img, 4)),
+                        outputs.new_zeros((num_fg_img, bbox_dim)),
                         gt_bboxes_per_image[matched_gt_inds],
                         expanded_strides[0][fg_mask],
                         x_shifts=x_shifts[0][fg_mask],
@@ -383,7 +402,7 @@ class YOLOXHead(nn.Module):
 
         num_fg = max(num_fg, 1)
         loss_iou = (
-            self.iou_loss(bbox_preds.view(-1, 4)[fg_masks], reg_targets)
+            self.iou_loss(bbox_preds.view(-1, bbox_dim)[fg_masks], reg_targets)
         ).sum() / num_fg
         loss_obj = (
             self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
@@ -395,7 +414,7 @@ class YOLOXHead(nn.Module):
         ).sum() / num_fg
         if self.use_l1:
             loss_l1 = (
-                self.l1_loss(origin_preds.view(-1, 4)[fg_masks], l1_targets)
+                self.l1_loss(origin_preds.view(-1, bbox_dim)[fg_masks], l1_targets)
             ).sum() / num_fg
         else:
             loss_l1 = 0.0
@@ -417,6 +436,9 @@ class YOLOXHead(nn.Module):
         l1_target[:, 1] = gt[:, 1] / stride - y_shifts
         l1_target[:, 2] = torch.log(gt[:, 2] / stride + eps)
         l1_target[:, 3] = torch.log(gt[:, 3] / stride + eps)
+        if self.use_oriented_bbox and gt.shape[1] > 4:
+            # For oriented bbox, also compute L1 target for angle
+            l1_target[:, 4] = gt[:, 4]
         return l1_target
 
     @torch.no_grad()
@@ -460,7 +482,10 @@ class YOLOXHead(nn.Module):
             gt_bboxes_per_image = gt_bboxes_per_image.cpu()
             bboxes_preds_per_image = bboxes_preds_per_image.cpu()
 
-        pair_wise_ious = bboxes_iou(gt_bboxes_per_image, bboxes_preds_per_image, False)
+        # For oriented boxes, use only first 4 dimensions (cx, cy, w, h) for IoU calculation
+        gt_boxes_for_iou = gt_bboxes_per_image[:, :4] if self.use_oriented_bbox else gt_bboxes_per_image
+        pred_boxes_for_iou = bboxes_preds_per_image[:, :4] if self.use_oriented_bbox else bboxes_preds_per_image
+        pair_wise_ious = bboxes_iou(gt_boxes_for_iou, pred_boxes_for_iou, False)
 
         gt_cls_per_image = (
             F.one_hot(gt_classes.to(torch.int64), self.num_classes)
@@ -603,9 +628,10 @@ class YOLOXHead(nn.Module):
             outputs.append(output)
 
         outputs = torch.cat(outputs, 1)
-        bbox_preds = outputs[:, :, :4]  # [batch, n_anchors_all, 4]
-        obj_preds = outputs[:, :, 4:5]  # [batch, n_anchors_all, 1]
-        cls_preds = outputs[:, :, 5:]  # [batch, n_anchors_all, n_cls]
+        bbox_dim = 5 if self.use_oriented_bbox else 4
+        bbox_preds = outputs[:, :, :bbox_dim]  # [batch, n_anchors_all, 4 or 5]
+        obj_preds = outputs[:, :, bbox_dim:bbox_dim+1]  # [batch, n_anchors_all, 1]
+        cls_preds = outputs[:, :, bbox_dim+1:]  # [batch, n_anchors_all, n_cls]
 
         # calculate targets
         total_num_anchors = outputs.shape[1]
@@ -620,7 +646,7 @@ class YOLOXHead(nn.Module):
             if num_gt == 0:
                 fg_mask = outputs.new_zeros(total_num_anchors).bool()
             else:
-                gt_bboxes_per_image = label[:num_gt, 1:5]
+                gt_bboxes_per_image = label[:num_gt, 1:5]  # Always use first 4 for visualization
                 gt_classes = label[:num_gt, 0]
                 bboxes_preds_per_image = bbox_preds[batch_idx]
                 _, fg_mask, _, matched_gt_inds, _ = self.get_assignments(  # noqa
