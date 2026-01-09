@@ -5,6 +5,8 @@ import numpy as np
 
 import torch
 import torchvision
+from shapely.geometry import Polygon
+from shapely.validation import make_valid
 
 __all__ = [
     "filter_box",
@@ -15,6 +17,8 @@ __all__ = [
     "xyxy2xywh",
     "xyxy2cxcywh",
     "cxcywh2xyxy",
+    "polygon_iou",
+    "polygon_area",
 ]
 
 
@@ -141,3 +145,111 @@ def cxcywh2xyxy(bboxes):
     bboxes[:, 2] = bboxes[:, 0] + bboxes[:, 2]
     bboxes[:, 3] = bboxes[:, 1] + bboxes[:, 3]
     return bboxes
+
+
+def polygon_area(vertices):
+    """
+    Calculate the area of a polygon given its vertices.
+    
+    Args:
+        vertices: (N, 8) tensor or array representing N polygons with 4 vertices each (x1,y1,x2,y2,x3,y3,x4,y4)
+    
+    Returns:
+        areas: (N,) tensor or array of polygon areas
+    """
+    if isinstance(vertices, torch.Tensor):
+        # Reshape to (N, 4, 2) for 4 vertices with (x, y) coordinates
+        vertices = vertices.view(-1, 4, 2)
+        # Use Shoelace formula for area calculation
+        x = vertices[:, :, 0]
+        y = vertices[:, :, 1]
+        # Roll to get next vertex coordinates
+        x_next = torch.roll(x, -1, dims=1)
+        y_next = torch.roll(y, -1, dims=1)
+        # Calculate area using cross product
+        area = 0.5 * torch.abs((x * y_next - x_next * y).sum(dim=1))
+        return area
+    else:
+        # NumPy version
+        vertices = vertices.reshape(-1, 4, 2)
+        x = vertices[:, :, 0]
+        y = vertices[:, :, 1]
+        x_next = np.roll(x, -1, axis=1)
+        y_next = np.roll(y, -1, axis=1)
+        area = 0.5 * np.abs((x * y_next - x_next * y).sum(axis=1))
+        return area
+
+
+def polygon_iou(polygons_a, polygons_b, use_torch=True):
+    """
+    Calculate IoU between two sets of polygons.
+    
+    Args:
+        polygons_a: (N, 8) tensor or array representing N polygons with 4 vertices each
+        polygons_b: (M, 8) tensor or array representing M polygons with 4 vertices each
+        use_torch: whether to return torch tensor (True) or numpy array (False)
+    
+    Returns:
+        iou_matrix: (N, M) tensor or array of IoU values
+    """
+    if polygons_a.shape[1] != 8 or polygons_b.shape[1] != 8:
+        raise IndexError("Polygons must have 8 values (4 vertices with x,y coordinates)")
+    
+    # Convert to numpy for Shapely processing
+    if isinstance(polygons_a, torch.Tensor):
+        polygons_a_np = polygons_a.detach().cpu().numpy()
+        polygons_b_np = polygons_b.detach().cpu().numpy()
+        device = polygons_a.device
+        dtype = polygons_a.dtype
+    else:
+        polygons_a_np = polygons_a
+        polygons_b_np = polygons_b
+        device = None
+        dtype = None
+    
+    n_a = polygons_a_np.shape[0]
+    n_b = polygons_b_np.shape[0]
+    iou_matrix = np.zeros((n_a, n_b), dtype=np.float32)
+    
+    for i in range(n_a):
+        # Reshape to (4, 2) for 4 vertices
+        coords_a = polygons_a_np[i].reshape(4, 2)
+        try:
+            poly_a = Polygon(coords_a)
+            if not poly_a.is_valid:
+                poly_a = make_valid(poly_a)
+            area_a = poly_a.area
+        except Exception:
+            # Degenerate polygon, IoU is 0
+            continue
+        
+        for j in range(n_b):
+            coords_b = polygons_b_np[j].reshape(4, 2)
+            try:
+                poly_b = Polygon(coords_b)
+                if not poly_b.is_valid:
+                    poly_b = make_valid(poly_b)
+                area_b = poly_b.area
+                
+                # Calculate intersection
+                if poly_a.intersects(poly_b):
+                    intersection = poly_a.intersection(poly_b)
+                    area_i = intersection.area
+                else:
+                    area_i = 0.0
+                
+                # Calculate IoU
+                area_u = area_a + area_b - area_i
+                if area_u > 0:
+                    iou_matrix[i, j] = area_i / area_u
+                else:
+                    iou_matrix[i, j] = 0.0
+                    
+            except Exception:
+                # Degenerate polygon, IoU is 0
+                iou_matrix[i, j] = 0.0
+    
+    if use_torch and device is not None:
+        return torch.from_numpy(iou_matrix).to(device=device, dtype=dtype)
+    else:
+        return iou_matrix
