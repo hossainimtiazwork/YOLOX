@@ -28,8 +28,8 @@ class YOLOXHead(nn.Module):
     ):
         """
         Args:
-            act (str): activation type of conv. Defalut value: "silu".
-            depthwise (bool): whether apply depthwise conv in conv branch. Defalut value: False.
+            act (str): activation type of conv. Default value: "silu".
+            depthwise (bool): whether apply depthwise conv in conv branch. Default value: False.
             use_oriented_bbox (bool): whether to use oriented bounding boxes (5 params: x, y, w, h, angle). Default value: False.
         """
         super().__init__()
@@ -646,7 +646,9 @@ class YOLOXHead(nn.Module):
             if num_gt == 0:
                 fg_mask = outputs.new_zeros(total_num_anchors).bool()
             else:
-                gt_bboxes_per_image = label[:num_gt, 1:5]  # Always use first 4 for visualization
+                # For visualization, always use first 4 params (cx, cy, w, h) even for oriented boxes
+                # The visualize_assign function currently only supports axis-aligned boxes
+                gt_bboxes_per_image = label[:num_gt, 1:5]
                 gt_classes = label[:num_gt, 0]
                 bboxes_preds_per_image = bbox_preds[batch_idx]
                 _, fg_mask, _, matched_gt_inds, _ = self.get_assignments(  # noqa

@@ -26,7 +26,7 @@ class IOUloss(nn.Module):
         else:
             pred_box = pred.view(-1, 4)
             target_box = target.view(-1, 4)
-        
+
         tl = torch.max(
             (pred_box[:, :2] - pred_box[:, 2:] / 2), (target_box[:, :2] - target_box[:, 2:] / 2)
         )
