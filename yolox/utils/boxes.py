@@ -193,7 +193,7 @@ def polygon_iou(polygons_a, polygons_b, use_torch=True):
         iou_matrix: (N, M) tensor or array of IoU values
     """
     if polygons_a.shape[1] != 8 or polygons_b.shape[1] != 8:
-        raise IndexError("Polygons must have 8 values (4 vertices with x,y coordinates)")
+        raise ValueError("Polygons must have 8 values (4 vertices with x,y coordinates)")
     
     # Convert to numpy for Shapely processing
     if isinstance(polygons_a, torch.Tensor):
@@ -211,29 +211,53 @@ def polygon_iou(polygons_a, polygons_b, use_torch=True):
     n_b = polygons_b_np.shape[0]
     iou_matrix = np.zeros((n_a, n_b), dtype=np.float32)
     
+    # Pre-create and validate polygons for set A
+    polys_a = []
+    areas_a = []
     for i in range(n_a):
-        # Reshape to (4, 2) for 4 vertices
         coords_a = polygons_a_np[i].reshape(4, 2)
         try:
             poly_a = Polygon(coords_a)
             if not poly_a.is_valid:
                 poly_a = make_valid(poly_a)
-            area_a = poly_a.area
+            polys_a.append(poly_a)
+            areas_a.append(poly_a.area)
         except Exception:
-            # Degenerate polygon, IoU is 0
+            # Degenerate polygon
+            polys_a.append(None)
+            areas_a.append(0.0)
+    
+    # Pre-create and validate polygons for set B
+    polys_b = []
+    areas_b = []
+    for j in range(n_b):
+        coords_b = polygons_b_np[j].reshape(4, 2)
+        try:
+            poly_b = Polygon(coords_b)
+            if not poly_b.is_valid:
+                poly_b = make_valid(poly_b)
+            polys_b.append(poly_b)
+            areas_b.append(poly_b.area)
+        except Exception:
+            # Degenerate polygon
+            polys_b.append(None)
+            areas_b.append(0.0)
+    
+    # Compute IoU matrix
+    for i in range(n_a):
+        if polys_a[i] is None:
             continue
+        area_a = areas_a[i]
         
         for j in range(n_b):
-            coords_b = polygons_b_np[j].reshape(4, 2)
+            if polys_b[j] is None:
+                continue
+            area_b = areas_b[j]
+            
             try:
-                poly_b = Polygon(coords_b)
-                if not poly_b.is_valid:
-                    poly_b = make_valid(poly_b)
-                area_b = poly_b.area
-                
                 # Calculate intersection
-                if poly_a.intersects(poly_b):
-                    intersection = poly_a.intersection(poly_b)
+                if polys_a[i].intersects(polys_b[j]):
+                    intersection = polys_a[i].intersection(polys_b[j])
                     area_i = intersection.area
                 else:
                     area_i = 0.0
@@ -246,7 +270,7 @@ def polygon_iou(polygons_a, polygons_b, use_torch=True):
                     iou_matrix[i, j] = 0.0
                     
             except Exception:
-                # Degenerate polygon, IoU is 0
+                # Handle any unexpected errors
                 iou_matrix[i, j] = 0.0
     
     if use_torch and device is not None:

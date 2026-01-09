@@ -79,18 +79,11 @@ class PolygonIOULoss(nn.Module):
         target = target.view(-1, 8)
         
         # Calculate IoU using polygon_iou function
-        # For loss calculation, we need pairwise IoU (diagonal elements)
-        # Use a loop for efficiency with diagonal IoU calculation
-        n = pred.shape[0]
-        ious = torch.zeros(n, device=pred.device, dtype=pred.dtype)
+        # For loss calculation, compute full IoU matrix and extract diagonal
+        iou_matrix = polygon_iou(pred, target, use_torch=True)
         
-        for i in range(n):
-            iou_matrix = polygon_iou(
-                pred[i:i+1], 
-                target[i:i+1], 
-                use_torch=True
-            )
-            ious[i] = iou_matrix[0, 0]
+        # Extract diagonal elements (pairwise IoU)
+        ious = torch.diagonal(iou_matrix)
         
         if self.loss_type == "iou":
             loss = 1 - ious ** 2
