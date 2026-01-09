@@ -230,7 +230,11 @@ def xyxy2polygon(bboxes):
 def polygon_iou(polygons_a, polygons_b):
     """
     Calculate IoU between polygons by converting to bounding boxes.
-    For simple polygons, we approximate using the bounding box IoU.
+    
+    Note: This is an approximation that uses axis-aligned bounding boxes.
+    For simple convex quadrilaterals, this provides a reasonable approximation.
+    For more accurate IoU calculation of arbitrary polygons, consider using
+    specialized geometric libraries like Shapely.
     
     Args:
         polygons_a: tensor of shape [N, 8]

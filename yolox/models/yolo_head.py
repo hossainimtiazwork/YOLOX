@@ -421,9 +421,9 @@ class YOLOXHead(nn.Module):
     def get_l1_target(self, l1_target, gt, stride, x_shifts, y_shifts, eps=1e-8):
         # For polygon format: 8 values (x1, y1, x2, y2, x3, y3, x4, y4)
         # Each point is relative to grid cell
-        for i in range(4):
-            l1_target[:, i*2] = gt[:, i*2] / stride - x_shifts
-            l1_target[:, i*2+1] = gt[:, i*2+1] / stride - y_shifts
+        for point_idx in range(4):
+            l1_target[:, point_idx*2] = gt[:, point_idx*2] / stride - x_shifts
+            l1_target[:, point_idx*2+1] = gt[:, point_idx*2+1] / stride - y_shifts
         return l1_target
 
     @torch.no_grad()
