@@ -203,6 +203,7 @@ python -m yolox.tools.eval -n  yolox-s -c yolox_s.pth -b 1 -d 1 --conf 0.001 --f
 *  [Manipulating training image size](docs/manipulate_training_image_size.md)
 *  [Assignment visualization](docs/assignment_visualization.md)
 *  [Freezing model](docs/freeze_module.md)
+*  [Oriented bounding boxes](docs/oriented_bbox.md)
 
 </details>
 
