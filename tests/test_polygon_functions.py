@@ -6,7 +6,7 @@ import unittest
 import torch
 import numpy as np
 
-from yolox.utils import polygon_iou, polygon_area
+from yolox.utils import polygon_iou, polygon_area, polygon_to_bbox
 from yolox.models.losses import PolygonIOULoss
 
 
@@ -110,6 +110,40 @@ class TestPolygonFunctions(unittest.TestCase):
         poly2 = np.array([[0.0, 0.0, 10.0, 0.0, 10.0, 10.0, 0.0, 10.0]])
         iou = polygon_iou(poly1, poly2, use_torch=False)
         self.assertAlmostEqual(iou[0, 0], 1.0, places=3)
+
+    def test_polygon_to_bbox_torch(self):
+        """Test polygon to bounding box conversion with torch tensors"""
+        # Square polygon
+        polygon = torch.tensor([[0.0, 0.0, 10.0, 0.0, 10.0, 10.0, 0.0, 10.0]])
+        bbox = polygon_to_bbox(polygon)
+        expected = torch.tensor([[0.0, 0.0, 10.0, 10.0]])
+        self.assertTrue(torch.allclose(bbox, expected))
+        
+        # Rotated rectangle
+        polygon = torch.tensor([[5.0, 0.0, 10.0, 5.0, 5.0, 10.0, 0.0, 5.0]])
+        bbox = polygon_to_bbox(polygon)
+        expected = torch.tensor([[0.0, 0.0, 10.0, 10.0]])
+        self.assertTrue(torch.allclose(bbox, expected))
+
+    def test_polygon_to_bbox_numpy(self):
+        """Test polygon to bounding box conversion with numpy arrays"""
+        polygon = np.array([[0.0, 0.0, 10.0, 0.0, 10.0, 10.0, 0.0, 10.0]])
+        bbox = polygon_to_bbox(polygon)
+        expected = np.array([[0.0, 0.0, 10.0, 10.0]])
+        np.testing.assert_array_almost_equal(bbox, expected)
+
+    def test_polygon_to_bbox_batch(self):
+        """Test polygon to bounding box conversion with batches"""
+        polygons = torch.tensor([
+            [0.0, 0.0, 10.0, 0.0, 10.0, 10.0, 0.0, 10.0],
+            [5.0, 5.0, 15.0, 5.0, 15.0, 15.0, 5.0, 15.0]
+        ])
+        bboxes = polygon_to_bbox(polygons)
+        expected = torch.tensor([
+            [0.0, 0.0, 10.0, 10.0],
+            [5.0, 5.0, 15.0, 15.0]
+        ])
+        self.assertTrue(torch.allclose(bboxes, expected))
 
 
 if __name__ == "__main__":

@@ -19,6 +19,7 @@ __all__ = [
     "cxcywh2xyxy",
     "polygon_iou",
     "polygon_area",
+    "polygon_to_bbox",
 ]
 
 
@@ -82,7 +83,7 @@ def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agn
 
 def bboxes_iou(bboxes_a, bboxes_b, xyxy=True):
     if bboxes_a.shape[1] != 4 or bboxes_b.shape[1] != 4:
-        raise IndexError
+        raise ValueError("Bounding boxes must have 4 values (x1, y1, x2, y2) or (cx, cy, w, h)")
 
     if xyxy:
         tl = torch.max(bboxes_a[:, None, :2], bboxes_b[:, :2])
@@ -277,3 +278,40 @@ def polygon_iou(polygons_a, polygons_b, use_torch=True):
         return torch.from_numpy(iou_matrix).to(device=device, dtype=dtype)
     else:
         return iou_matrix
+
+
+def polygon_to_bbox(polygons):
+    """
+    Convert polygon vertices to axis-aligned bounding boxes.
+    
+    Args:
+        polygons: (N, 8) tensor or array representing N polygons with 4 vertices each
+                  Format: (x1, y1, x2, y2, x3, y3, x4, y4)
+    
+    Returns:
+        bboxes: (N, 4) tensor or array in xyxy format (x_min, y_min, x_max, y_max)
+    """
+    if isinstance(polygons, torch.Tensor):
+        # Reshape to (N, 4, 2) for 4 vertices with (x, y) coordinates
+        vertices = polygons.view(-1, 4, 2)
+        x_coords = vertices[:, :, 0]
+        y_coords = vertices[:, :, 1]
+        
+        x_min = x_coords.min(dim=1)[0]
+        y_min = y_coords.min(dim=1)[0]
+        x_max = x_coords.max(dim=1)[0]
+        y_max = y_coords.max(dim=1)[0]
+        
+        return torch.stack([x_min, y_min, x_max, y_max], dim=1)
+    else:
+        # NumPy version
+        vertices = polygons.reshape(-1, 4, 2)
+        x_coords = vertices[:, :, 0]
+        y_coords = vertices[:, :, 1]
+        
+        x_min = x_coords.min(axis=1)
+        y_min = y_coords.min(axis=1)
+        x_max = x_coords.max(axis=1)
+        y_max = y_coords.max(axis=1)
+        
+        return np.stack([x_min, y_min, x_max, y_max], axis=1)

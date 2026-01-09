@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from yolox.utils import bboxes_iou, cxcywh2xyxy, meshgrid, visualize_assign, polygon_iou
+from yolox.utils import bboxes_iou, cxcywh2xyxy, meshgrid, visualize_assign, polygon_iou, polygon_to_bbox
 
 from .losses import IOUloss, PolygonIOULoss
 from .network_blocks import BaseConv, DWConv
@@ -531,18 +531,18 @@ class YOLOXHead(nn.Module):
         y_centers_per_image = ((y_shifts[0] + 0.5) * expanded_strides_per_image).unsqueeze(0)
 
         # For polygons, compute centroid as average of 4 vertices
-        gt_centroids_x = (gt_bboxes_per_image[:, 0] + gt_bboxes_per_image[:, 2] + 
-                          gt_bboxes_per_image[:, 4] + gt_bboxes_per_image[:, 6]) / 4
-        gt_centroids_y = (gt_bboxes_per_image[:, 1] + gt_bboxes_per_image[:, 3] + 
-                          gt_bboxes_per_image[:, 5] + gt_bboxes_per_image[:, 7]) / 4
+        vertices = gt_bboxes_per_image.view(-1, 4, 2)
+        gt_centroids = vertices.mean(dim=1)  # (N, 2)
+        gt_centroids_x = gt_centroids[:, 0].unsqueeze(1)
+        gt_centroids_y = gt_centroids[:, 1].unsqueeze(1)
         
         # in fixed center
         center_radius = 1.5
         center_dist = expanded_strides_per_image.unsqueeze(0) * center_radius
-        gt_bboxes_per_image_l = gt_centroids_x.unsqueeze(1) - center_dist
-        gt_bboxes_per_image_r = gt_centroids_x.unsqueeze(1) + center_dist
-        gt_bboxes_per_image_t = gt_centroids_y.unsqueeze(1) - center_dist
-        gt_bboxes_per_image_b = gt_centroids_y.unsqueeze(1) + center_dist
+        gt_bboxes_per_image_l = gt_centroids_x - center_dist
+        gt_bboxes_per_image_r = gt_centroids_x + center_dist
+        gt_bboxes_per_image_t = gt_centroids_y - center_dist
+        gt_bboxes_per_image_b = gt_centroids_y + center_dist
 
         c_l = x_centers_per_image - gt_bboxes_per_image_l
         c_r = gt_bboxes_per_image_r - x_centers_per_image
@@ -651,13 +651,7 @@ class YOLOXHead(nn.Module):
 
             # For polygons, convert to axis-aligned boxes for visualization
             if num_gt > 0:
-                # Convert polygon vertices to xyxy format for visualization
-                gt_polygons = gt_bboxes_per_image.view(-1, 4, 2)
-                x_min = gt_polygons[:, :, 0].min(dim=1)[0]
-                y_min = gt_polygons[:, :, 1].min(dim=1)[0]
-                x_max = gt_polygons[:, :, 0].max(dim=1)[0]
-                y_max = gt_polygons[:, :, 1].max(dim=1)[0]
-                xyxy_boxes = torch.stack([x_min, y_min, x_max, y_max], dim=1)
+                xyxy_boxes = polygon_to_bbox(gt_bboxes_per_image)
             else:
                 xyxy_boxes = torch.zeros((0, 4))
             
