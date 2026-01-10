@@ -111,19 +111,20 @@ class MosaicDetection(Dataset):
 
                 labels = _labels.copy()
                 # Normalized xywh to pixel xyxy format
+                # Handle both traditional (4 coords) and polygon (8 coords) formats
                 if _labels.size > 0:
-                    labels[:, 0] = scale * _labels[:, 0] + padw
-                    labels[:, 1] = scale * _labels[:, 1] + padh
-                    labels[:, 2] = scale * _labels[:, 2] + padw
-                    labels[:, 3] = scale * _labels[:, 3] + padh
+                    # Scale and translate all x coordinates (even indices)
+                    labels[:, 0::2] = scale * _labels[:, 0::2] + padw
+                    # Scale and translate all y coordinates (odd indices)
+                    labels[:, 1::2] = scale * _labels[:, 1::2] + padh
                 mosaic_labels.append(labels)
 
             if len(mosaic_labels):
                 mosaic_labels = np.concatenate(mosaic_labels, 0)
-                np.clip(mosaic_labels[:, 0], 0, 2 * input_w, out=mosaic_labels[:, 0])
-                np.clip(mosaic_labels[:, 1], 0, 2 * input_h, out=mosaic_labels[:, 1])
-                np.clip(mosaic_labels[:, 2], 0, 2 * input_w, out=mosaic_labels[:, 2])
-                np.clip(mosaic_labels[:, 3], 0, 2 * input_h, out=mosaic_labels[:, 3])
+                # Clip all x coordinates (even indices) and y coordinates (odd indices)
+                # Works for both traditional (4 coords) and polygon (8 coords) formats
+                np.clip(mosaic_labels[:, 0::2], 0, 2 * input_w, out=mosaic_labels[:, 0::2])
+                np.clip(mosaic_labels[:, 1::2], 0, 2 * input_h, out=mosaic_labels[:, 1::2])
 
             mosaic_img, mosaic_labels = random_affine(
                 mosaic_img,
@@ -209,13 +210,19 @@ class MosaicDetection(Dataset):
             y_offset: y_offset + target_h, x_offset: x_offset + target_w
         ]
 
+        # Detect format: if cp_labels has > 5 columns, it's polygon format (8 coords + class)
+        # Traditional format: [x1, y1, x2, y2, class] (5 columns)
+        # Polygon format: [x1, y1, x2, y2, x3, y3, x4, y4, class] (9 columns)
+        is_polygon = cp_labels.shape[1] > 5
+        bbox_end_idx = 8 if is_polygon else 4
+        class_start_idx = 8 if is_polygon else 4
+        
         cp_bboxes_origin_np = adjust_box_anns(
-            cp_labels[:, :4].copy(), cp_scale_ratio, 0, 0, origin_w, origin_h
+            cp_labels[:, :bbox_end_idx].copy(), cp_scale_ratio, 0, 0, origin_w, origin_h
         )
         if FLIP:
-            cp_bboxes_origin_np[:, 0::2] = (
-                origin_w - cp_bboxes_origin_np[:, 0::2][:, ::-1]
-            )
+            # Mirror all x coordinates (at even indices: 0, 2, 4, 6 for polygon or 0, 2 for bbox)
+            cp_bboxes_origin_np[:, 0::2] = origin_w - cp_bboxes_origin_np[:, 0::2]
         cp_bboxes_transformed_np = cp_bboxes_origin_np.copy()
         cp_bboxes_transformed_np[:, 0::2] = np.clip(
             cp_bboxes_transformed_np[:, 0::2] - x_offset, 0, target_w
@@ -224,7 +231,7 @@ class MosaicDetection(Dataset):
             cp_bboxes_transformed_np[:, 1::2] - y_offset, 0, target_h
         )
 
-        cls_labels = cp_labels[:, 4:5].copy()
+        cls_labels = cp_labels[:, class_start_idx:class_start_idx+1].copy()
         box_labels = cp_bboxes_transformed_np
         labels = np.hstack((box_labels, cls_labels))
         origin_labels = np.vstack((origin_labels, labels))
