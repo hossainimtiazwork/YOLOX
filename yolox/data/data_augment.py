@@ -185,31 +185,55 @@ class TrainTransform:
         self.hsv_prob = hsv_prob
 
     def __call__(self, image, targets, input_dim):
-        boxes = targets[:, :4].copy()
-        labels = targets[:, 4].copy()
+        # Detect format: if targets has > 5 columns, it's polygon format
+        # Traditional format: [x1, y1, x2, y2, class] (5 columns)
+        # Polygon format: [x1, y1, x2, y2, x3, y3, x4, y4, class] (9 columns)
+        is_polygon = targets.shape[1] > 5
+        bbox_end_idx = 8 if is_polygon else 4
+        class_idx = 8 if is_polygon else 4
+        
+        boxes = targets[:, :bbox_end_idx].copy()
+        labels = targets[:, class_idx].copy()
         if len(boxes) == 0:
-            targets = np.zeros((self.max_labels, 5), dtype=np.float32)
+            padded_size = 9 if is_polygon else 5
+            targets = np.zeros((self.max_labels, padded_size), dtype=np.float32)
             image, r_o = preproc(image, input_dim)
             return image, targets
 
         image_o = image.copy()
         targets_o = targets.copy()
         height_o, width_o, _ = image_o.shape
-        boxes_o = targets_o[:, :4]
-        labels_o = targets_o[:, 4]
-        # bbox_o: [xyxy] to [c_x,c_y,w,h]
-        boxes_o = xyxy2cxcywh(boxes_o)
+        boxes_o = targets_o[:, :bbox_end_idx]
+        labels_o = targets_o[:, class_idx]
+        
+        # For traditional bbox: [xyxy] to [c_x,c_y,w,h]
+        # For polygon: keep as is (polygon format doesn't use center+size representation)
+        if not is_polygon:
+            boxes_o = xyxy2cxcywh(boxes_o)
 
         if random.random() < self.hsv_prob:
             augment_hsv(image)
         image_t, boxes = _mirror(image, boxes, self.flip_prob)
         height, width, _ = image_t.shape
         image_t, r_ = preproc(image_t, input_dim)
-        # boxes [xyxy] 2 [cx,cy,w,h]
-        boxes = xyxy2cxcywh(boxes)
+        
+        # For traditional bbox: [xyxy] to [cx,cy,w,h]
+        # For polygon: keep as is
+        if not is_polygon:
+            boxes = xyxy2cxcywh(boxes)
         boxes *= r_
 
-        mask_b = np.minimum(boxes[:, 2], boxes[:, 3]) > 1
+        # Filter out small boxes
+        if is_polygon:
+            # For polygon, check if any dimension of bounding box is > 1
+            x_coords = boxes[:, 0::2]
+            y_coords = boxes[:, 1::2]
+            bbox_widths = np.max(x_coords, axis=1) - np.min(x_coords, axis=1)
+            bbox_heights = np.max(y_coords, axis=1) - np.min(y_coords, axis=1)
+            mask_b = np.minimum(bbox_widths, bbox_heights) > 1
+        else:
+            mask_b = np.minimum(boxes[:, 2], boxes[:, 3]) > 1
+            
         boxes_t = boxes[mask_b]
         labels_t = labels[mask_b]
 
@@ -222,7 +246,8 @@ class TrainTransform:
         labels_t = np.expand_dims(labels_t, 1)
 
         targets_t = np.hstack((labels_t, boxes_t))
-        padded_labels = np.zeros((self.max_labels, 5))
+        padded_size = 9 if is_polygon else 5
+        padded_labels = np.zeros((self.max_labels, padded_size))
         padded_labels[range(len(targets_t))[: self.max_labels]] = targets_t[
             : self.max_labels
         ]
