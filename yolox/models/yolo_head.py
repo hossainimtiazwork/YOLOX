@@ -538,10 +538,11 @@ class YOLOXHead(nn.Module):
         del pair_wise_cls_loss, cost, pair_wise_ious, pair_wise_ious_loss
 
         if mode == "cpu":
-            gt_matched_classes = gt_matched_classes.cuda()
-            fg_mask = fg_mask.cuda()
-            pred_ious_this_matching = pred_ious_this_matching.cuda()
-            matched_gt_inds = matched_gt_inds.cuda()
+            device = bboxes_preds_per_image.device
+            gt_matched_classes = gt_matched_classes.to(device)
+            fg_mask = fg_mask.to(device)
+            pred_ious_this_matching = pred_ious_this_matching.to(device)
+            matched_gt_inds = matched_gt_inds.to(device)
 
         return (
             gt_matched_classes,

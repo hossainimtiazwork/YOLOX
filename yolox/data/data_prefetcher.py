@@ -15,30 +15,38 @@ class DataPrefetcher:
 
     def __init__(self, loader):
         self.loader = iter(loader)
-        self.stream = torch.cuda.Stream()
-        self.input_cuda = self._input_cuda_for_image
-        self.record_stream = DataPrefetcher._record_stream_for_image
+        self.use_cuda = torch.cuda.is_available()
+        if self.use_cuda:
+            self.stream = torch.cuda.Stream()
+            self.input_cuda = self._input_cuda_for_image
+            self.record_stream = DataPrefetcher._record_stream_for_image
         self.preload()
 
     def preload(self):
         try:
-            self.next_input, self.next_target, _, _ = next(self.loader)
+            res = next(self.loader)
+            if len(res) == 4:
+                self.next_input, self.next_target, _, _ = res
+            else:
+                self.next_input, self.next_target = res
         except StopIteration:
             self.next_input = None
             self.next_target = None
             return
 
-        with torch.cuda.stream(self.stream):
-            self.input_cuda()
-            self.next_target = self.next_target.cuda(non_blocking=True)
+        if self.use_cuda:
+            with torch.cuda.stream(self.stream):
+                self.input_cuda()
+                self.next_target = self.next_target.cuda(non_blocking=True)
 
     def next(self):
-        torch.cuda.current_stream().wait_stream(self.stream)
+        if self.use_cuda:
+            torch.cuda.current_stream().wait_stream(self.stream)
         input = self.next_input
         target = self.next_target
-        if input is not None:
+        if input is not None and self.use_cuda:
             self.record_stream(input)
-        if target is not None:
+        if target is not None and self.use_cuda:
             target.record_stream(torch.cuda.current_stream())
         self.preload()
         return input, target
