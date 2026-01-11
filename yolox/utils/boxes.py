@@ -30,57 +30,128 @@ def filter_box(output, scale_range):
 
 
 def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agnostic=False):
-    box_corner = prediction.new(prediction.shape)
-    box_corner[:, :, 0] = prediction[:, :, 0] - prediction[:, :, 2] / 2
-    box_corner[:, :, 1] = prediction[:, :, 1] - prediction[:, :, 3] / 2
-    box_corner[:, :, 2] = prediction[:, :, 0] + prediction[:, :, 2] / 2
-    box_corner[:, :, 3] = prediction[:, :, 1] + prediction[:, :, 3] / 2
-    prediction[:, :, :4] = box_corner[:, :, :4]
+    # Check if polygon format (8 coords + obj + classes) or bbox format (4 coords + obj + classes)
+    if prediction.shape[2] >= 9 + num_classes:
+        # Polygon format - convert to bbox for NMS
+        polygon_coords = prediction[:, :, :8].clone()
+        
+        # Convert polygon to bounding box for NMS
+        x_coords = polygon_coords[:, :, [0, 2, 4, 6]]
+        y_coords = polygon_coords[:, :, [1, 3, 5, 7]]
+        min_x = x_coords.min(dim=2)[0]
+        max_x = x_coords.max(dim=2)[0]
+        min_y = y_coords.min(dim=2)[0]
+        max_y = y_coords.max(dim=2)[0]
+        
+        box_corner = torch.stack([min_x, min_y, max_x, max_y], dim=2)
+        
+        output = [None for _ in range(len(prediction))]
+        for i, image_pred in enumerate(prediction):
+            # If none are remaining => process next image
+            if not image_pred.size(0):
+                continue
+            # Get score and class with highest confidence
+            class_conf, class_pred = torch.max(image_pred[:, 9: 9 + num_classes], 1, keepdim=True)
+            
+            conf_mask = (image_pred[:, 8] * class_conf.squeeze() >= conf_thre).squeeze()
+            # Detections ordered as (8 polygon coords, obj_conf, class_conf, class_pred)
+            detections = torch.cat((image_pred[:, :9], class_conf, class_pred.float()), 1)
+            detections = detections[conf_mask]
+            bbox_for_nms = box_corner[i][conf_mask]
+            
+            if not detections.size(0):
+                continue
+            
+            if class_agnostic:
+                nms_out_index = torchvision.ops.nms(
+                    bbox_for_nms,
+                    detections[:, 8] * detections[:, 9],
+                    nms_thre,
+                )
+            else:
+                nms_out_index = torchvision.ops.batched_nms(
+                    bbox_for_nms,
+                    detections[:, 8] * detections[:, 9],
+                    detections[:, 10],
+                    nms_thre,
+                )
+            
+            detections = detections[nms_out_index]
+            if output[i] is None:
+                output[i] = detections
+            else:
+                output[i] = torch.cat((output[i], detections))
+    else:
+        # Original bbox format
+        box_corner = prediction.new(prediction.shape)
+        box_corner[:, :, 0] = prediction[:, :, 0] - prediction[:, :, 2] / 2
+        box_corner[:, :, 1] = prediction[:, :, 1] - prediction[:, :, 3] / 2
+        box_corner[:, :, 2] = prediction[:, :, 0] + prediction[:, :, 2] / 2
+        box_corner[:, :, 3] = prediction[:, :, 1] + prediction[:, :, 3] / 2
+        prediction[:, :, :4] = box_corner[:, :, :4]
 
-    output = [None for _ in range(len(prediction))]
-    for i, image_pred in enumerate(prediction):
+        output = [None for _ in range(len(prediction))]
+        for i, image_pred in enumerate(prediction):
 
-        # If none are remaining => process next image
-        if not image_pred.size(0):
-            continue
-        # Get score and class with highest confidence
-        class_conf, class_pred = torch.max(image_pred[:, 5: 5 + num_classes], 1, keepdim=True)
+            # If none are remaining => process next image
+            if not image_pred.size(0):
+                continue
+            # Get score and class with highest confidence
+            class_conf, class_pred = torch.max(image_pred[:, 5: 5 + num_classes], 1, keepdim=True)
 
-        conf_mask = (image_pred[:, 4] * class_conf.squeeze() >= conf_thre).squeeze()
-        # Detections ordered as (x1, y1, x2, y2, obj_conf, class_conf, class_pred)
-        detections = torch.cat((image_pred[:, :5], class_conf, class_pred.float()), 1)
-        detections = detections[conf_mask]
-        if not detections.size(0):
-            continue
+            conf_mask = (image_pred[:, 4] * class_conf.squeeze() >= conf_thre).squeeze()
+            # Detections ordered as (x1, y1, x2, y2, obj_conf, class_conf, class_pred)
+            detections = torch.cat((image_pred[:, :5], class_conf, class_pred.float()), 1)
+            detections = detections[conf_mask]
+            if not detections.size(0):
+                continue
 
-        if class_agnostic:
-            nms_out_index = torchvision.ops.nms(
-                detections[:, :4],
-                detections[:, 4] * detections[:, 5],
-                nms_thre,
-            )
-        else:
-            nms_out_index = torchvision.ops.batched_nms(
-                detections[:, :4],
-                detections[:, 4] * detections[:, 5],
-                detections[:, 6],
-                nms_thre,
-            )
+            if class_agnostic:
+                nms_out_index = torchvision.ops.nms(
+                    detections[:, :4],
+                    detections[:, 4] * detections[:, 5],
+                    nms_thre,
+                )
+            else:
+                nms_out_index = torchvision.ops.batched_nms(
+                    detections[:, :4],
+                    detections[:, 4] * detections[:, 5],
+                    detections[:, 6],
+                    nms_thre,
+                )
 
-        detections = detections[nms_out_index]
-        if output[i] is None:
-            output[i] = detections
-        else:
-            output[i] = torch.cat((output[i], detections))
+            detections = detections[nms_out_index]
+            if output[i] is None:
+                output[i] = detections
+            else:
+                output[i] = torch.cat((output[i], detections))
 
     return output
 
 
 def bboxes_iou(bboxes_a, bboxes_b, xyxy=True):
-    if bboxes_a.shape[1] != 4 or bboxes_b.shape[1] != 4:
-        raise IndexError
-
-    if xyxy:
+    # Check if polygon format (8 coordinates) or bbox format (4 coordinates)
+    if bboxes_a.shape[1] == 8 and bboxes_b.shape[1] == 8:
+        # Polygon format - convert to bounding boxes for IoU calculation
+        def polygon_to_bbox(coords):
+            x_coords = coords[:, [0, 2, 4, 6]]
+            y_coords = coords[:, [1, 3, 5, 7]]
+            min_x = x_coords.min(dim=1)[0]
+            max_x = x_coords.max(dim=1)[0]
+            min_y = y_coords.min(dim=1)[0]
+            max_y = y_coords.max(dim=1)[0]
+            return torch.stack([min_x, min_y, max_x, max_y], dim=1)
+        
+        bbox_a = polygon_to_bbox(bboxes_a)
+        bbox_b = polygon_to_bbox(bboxes_b)
+        
+        tl = torch.max(bbox_a[:, None, :2], bbox_b[:, :2])
+        br = torch.min(bbox_a[:, None, 2:], bbox_b[:, 2:])
+        area_a = torch.prod(bbox_a[:, 2:] - bbox_a[:, :2], 1)
+        area_b = torch.prod(bbox_b[:, 2:] - bbox_b[:, :2], 1)
+    elif bboxes_a.shape[1] != 4 or bboxes_b.shape[1] != 4:
+        raise IndexError("Bounding boxes must have 4 or 8 coordinates")
+    elif xyxy:
         tl = torch.max(bboxes_a[:, None, :2], bboxes_b[:, :2])
         br = torch.min(bboxes_a[:, None, 2:], bboxes_b[:, 2:])
         area_a = torch.prod(bboxes_a[:, 2:] - bboxes_a[:, :2], 1)
