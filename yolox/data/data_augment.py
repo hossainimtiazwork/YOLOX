@@ -16,6 +16,7 @@ import cv2
 import numpy as np
 
 from yolox.utils import xyxy2cxcywh
+from yolox.utils.boxes import polygon_area_np, polygon_centroid_np
 
 
 def augment_hsv(img, hgain=5, sgain=30, vgain=30):
@@ -241,3 +242,229 @@ class ValTransform:
             img -= np.array([0.485, 0.456, 0.406]).reshape(3, 1, 1)
             img /= np.array([0.229, 0.224, 0.225]).reshape(3, 1, 1)
         return img, np.zeros((1, 5))
+
+
+# ===================== Polygon Bounding Box Augmentations =====================
+
+
+def apply_affine_to_polygons(targets, target_size, M, scale):
+    """
+    Apply affine transformation to polygon annotations.
+    
+    Args:
+        targets: ndarray of shape (N, 9) where first 8 cols are polygon coords
+                 (x1,y1, x2,y2, x3,y3, x4,y4) and 9th is class
+        target_size: (width, height) of target image
+        M: 2x3 affine transformation matrix
+        scale: scale factor (unused but kept for API compatibility)
+    
+    Returns:
+        Transformed targets with adjusted polygon coordinates.
+    """
+    num_gts = len(targets)
+    if num_gts == 0:
+        return targets
+    
+    twidth, theight = target_size
+    
+    # Transform all 4 corner points (8 coordinates)
+    # Reshape to (N*4, 2) for matrix multiplication
+    points = np.ones((num_gts * 4, 3))
+    points[:, :2] = targets[:, :8].reshape(-1, 2)
+    
+    # Apply affine transform
+    transformed = points @ M.T  # (N*4, 2)
+    
+    # Reshape back to (N, 8)
+    new_coords = transformed[:, :2].reshape(num_gts, 8)
+    
+    # Clip to image bounds
+    new_coords[:, 0::2] = new_coords[:, 0::2].clip(0, twidth)
+    new_coords[:, 1::2] = new_coords[:, 1::2].clip(0, theight)
+    
+    targets[:, :8] = new_coords
+    return targets
+
+
+def random_affine_polygon(
+    img,
+    targets=(),
+    target_size=(640, 640),
+    degrees=10,
+    translate=0.1,
+    scales=0.1,
+    shear=10,
+):
+    """
+    Apply random affine transformation to image and polygon targets.
+    
+    Args:
+        img: Input image
+        targets: ndarray of shape (N, 9) - 8 polygon coords + 1 class
+        target_size: (width, height) of output
+        degrees: Rotation range
+        translate: Translation range
+        scales: Scale range
+        shear: Shear range
+    
+    Returns:
+        Transformed image and targets.
+    """
+    M, scale = get_affine_matrix(target_size, degrees, translate, scales, shear)
+    
+    img = cv2.warpAffine(img, M, dsize=target_size, borderValue=(114, 114, 114))
+    
+    # Transform polygon coordinates
+    if len(targets) > 0:
+        targets = apply_affine_to_polygons(targets, target_size, M, scale)
+    
+    return img, targets
+
+
+def _mirror_polygon(image, polygons, prob=0.5):
+    """
+    Apply horizontal flip to image and polygon annotations.
+    
+    Args:
+        image: Input image
+        polygons: ndarray of shape (N, 8+) with polygon coordinates
+        prob: Probability of applying mirror
+    
+    Returns:
+        Flipped image and polygons with x-coordinates mirrored.
+    """
+    _, width, _ = image.shape
+    if random.random() < prob:
+        image = image[:, ::-1]
+        # Mirror all x coordinates
+        polygons[:, 0::2] = width - polygons[:, 0::2]
+        # Reorder points to maintain consistent winding order
+        # Original: (x1,y1), (x2,y2), (x3,y3), (x4,y4)
+        # After flip: swap point pairs to maintain clockwise/counter-clockwise order
+        # We swap columns: [0,1,2,3,4,5,6,7] -> [2,1,0,3,6,5,4,7]
+        # This swaps p1<->p2 and p3<->p4 x-coordinates
+        temp = polygons.copy()
+        polygons[:, 0] = temp[:, 2]  # x2 -> x1
+        polygons[:, 2] = temp[:, 0]  # x1 -> x2
+        polygons[:, 4] = temp[:, 6]  # x4 -> x3
+        polygons[:, 6] = temp[:, 4]  # x3 -> x4
+    return image, polygons
+
+
+class TrainTransformPolygon:
+    """
+    Training transform for polygon bounding boxes.
+    Handles 8-coordinate polygon annotations instead of 4-coordinate axis-aligned boxes.
+    """
+    
+    def __init__(self, max_labels=50, flip_prob=0.5, hsv_prob=1.0):
+        """
+        Args:
+            max_labels: Maximum number of labels to keep
+            flip_prob: Probability of horizontal flip
+            hsv_prob: Probability of HSV augmentation
+        """
+        self.max_labels = max_labels
+        self.flip_prob = flip_prob
+        self.hsv_prob = hsv_prob
+
+    def __call__(self, image, targets, input_dim):
+        """
+        Apply transformations to image and polygon targets.
+        
+        Args:
+            image: Input image (H, W, C)
+            targets: ndarray of shape (N, 9) - 8 polygon coords + 1 class label
+                     Format: (x1,y1, x2,y2, x3,y3, x4,y4, class)
+            input_dim: Target input dimensions (height, width)
+        
+        Returns:
+            Transformed image and padded labels.
+            Labels format: (class, x1,y1, x2,y2, x3,y3, x4,y4)
+        """
+        polygons = targets[:, :8].copy()
+        labels = targets[:, 8].copy()
+        
+        if len(polygons) == 0:
+            # Return zeros with 9 columns: class + 8 coords
+            targets = np.zeros((self.max_labels, 9), dtype=np.float32)
+            image, r_o = preproc(image, input_dim)
+            return image, targets
+
+        image_o = image.copy()
+        targets_o = targets.copy()
+        height_o, width_o, _ = image_o.shape
+        polygons_o = targets_o[:, :8]
+        labels_o = targets_o[:, 8]
+
+        # Apply HSV augmentation
+        if random.random() < self.hsv_prob:
+            augment_hsv(image)
+        
+        # Apply mirror/flip
+        image_t, polygons = _mirror_polygon(image, polygons, self.flip_prob)
+        height, width, _ = image_t.shape
+        
+        # Preprocess (resize and pad)
+        image_t, r_ = preproc(image_t, input_dim)
+        
+        # Scale polygon coordinates
+        polygons *= r_
+        
+        # Filter by area - keep polygons with area > 1 pixel
+        areas = polygon_area_np(polygons)
+        mask_b = areas > 1
+        polygons_t = polygons[mask_b]
+        labels_t = labels[mask_b]
+
+        if len(polygons_t) == 0:
+            # Fallback to original
+            image_t, r_o = preproc(image_o, input_dim)
+            polygons_o *= r_o
+            polygons_t = polygons_o
+            labels_t = labels_o
+
+        labels_t = np.expand_dims(labels_t, 1)
+
+        # Format: (class, x1,y1, x2,y2, x3,y3, x4,y4)
+        targets_t = np.hstack((labels_t, polygons_t))
+        
+        # Pad to max_labels
+        padded_labels = np.zeros((self.max_labels, 9))
+        padded_labels[range(len(targets_t))[: self.max_labels]] = targets_t[
+            : self.max_labels
+        ]
+        padded_labels = np.ascontiguousarray(padded_labels, dtype=np.float32)
+        return image_t, padded_labels
+
+
+class ValTransformPolygon:
+    """
+    Validation transform for polygon bounding boxes.
+    """
+    
+    def __init__(self, swap=(2, 0, 1), legacy=False):
+        self.swap = swap
+        self.legacy = legacy
+
+    def __call__(self, img, res, input_size):
+        """
+        Apply validation preprocessing.
+        
+        Args:
+            img: Input image
+            res: Unused (for API compatibility)
+            input_size: Target size
+        
+        Returns:
+            Preprocessed image and empty polygon labels.
+        """
+        img, _ = preproc(img, input_size, self.swap)
+        if self.legacy:
+            img = img[::-1, :, :].copy()
+            img /= 255.0
+            img -= np.array([0.485, 0.456, 0.406]).reshape(3, 1, 1)
+            img /= np.array([0.229, 0.224, 0.225]).reshape(3, 1, 1)
+        # Return empty polygon labels (9 values: class + 8 coords)
+        return img, np.zeros((1, 9))
+
