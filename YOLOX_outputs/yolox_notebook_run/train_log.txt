@@ -1,0 +1,869 @@
+2026-01-11 19:18:37.425 | INFO     | yolox.core.trainer:before_train:132 - args: <__main__.Args object at 0x00000201B8FC6690>
+2026-01-11 19:18:37.435 | INFO     | yolox.core.trainer:before_train:133 - exp value:
+╒═══════════════════╤═══════════════════════════════════════════╕
+│ keys              │ values                                    │
+╞═══════════════════╪═══════════════════════════════════════════╡
+│ seed              │ None                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ output_dir        │ './YOLOX_outputs'                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ print_interval    │ 1                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ eval_interval     │ 1                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ dataset           │ None                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ num_classes       │ 3                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ depth             │ 0.33                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ width             │ 0.5                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ act               │ 'silu'                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ data_num_workers  │ 4                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ input_size        │ (640, 640)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ multiscale_range  │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ data_dir          │ 'datasets/Thermal Cheetah.v1-square.coco' │
+├───────────────────┼───────────────────────────────────────────┤
+│ train_ann         │ 'instances_train2017_poly.json'           │
+├───────────────────┼───────────────────────────────────────────┤
+│ val_ann           │ 'instances_val2017_poly.json'             │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_ann          │ 'instances_test2017_poly.json'            │
+├───────────────────┼───────────────────────────────────────────┤
+│ mosaic_prob       │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ mixup_prob        │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ hsv_prob          │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ flip_prob         │ 0.5                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ degrees           │ 10.0                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ translate         │ 0.1                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ mosaic_scale      │ (0.1, 2)                                  │
+├───────────────────┼───────────────────────────────────────────┤
+│ enable_mixup      │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ mixup_scale       │ (0.5, 1.5)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ shear             │ 2.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ warmup_epochs     │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ max_epoch         │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ warmup_lr         │ 0                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ min_lr_ratio      │ 0.05                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ basic_lr_per_img  │ 0.00015625                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ scheduler         │ 'yoloxwarmcos'                            │
+├───────────────────┼───────────────────────────────────────────┤
+│ no_aug_epochs     │ 15                                        │
+├───────────────────┼───────────────────────────────────────────┤
+│ ema               │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ weight_decay      │ 0.0005                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ momentum          │ 0.9                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ save_history_ckpt │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ exp_name          │ 'yolox_thermal_cheetah_poly'              │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_size         │ (640, 640)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_conf         │ 0.01                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ nmsthre           │ 0.65                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ use_polygon       │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ train_name        │ 'train'                                   │
+├───────────────────┼───────────────────────────────────────────┤
+│ val_name          │ 'valid'                                   │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_name         │ 'test'                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ class_names       │ ['cheetah', 'person', 'other']            │
+╘═══════════════════╧═══════════════════════════════════════════╛
+2026-01-11 19:18:37.991 | INFO     | yolox.core.trainer:before_train:139 - Model Summary: Params: 8.94M, Gflops: 26.77
+2026-01-11 19:22:10.750 | INFO     | yolox.core.trainer:before_train:132 - args: <__main__.Args object at 0x00000201D5E34D50>
+2026-01-11 19:22:10.755 | INFO     | yolox.core.trainer:before_train:133 - exp value:
+╒═══════════════════╤═══════════════════════════════════════════╕
+│ keys              │ values                                    │
+╞═══════════════════╪═══════════════════════════════════════════╡
+│ seed              │ None                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ output_dir        │ './YOLOX_outputs'                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ print_interval    │ 1                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ eval_interval     │ 1                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ dataset           │ None                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ num_classes       │ 3                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ depth             │ 0.33                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ width             │ 0.5                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ act               │ 'silu'                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ data_num_workers  │ 4                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ input_size        │ (640, 640)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ multiscale_range  │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ data_dir          │ 'datasets/Thermal Cheetah.v1-square.coco' │
+├───────────────────┼───────────────────────────────────────────┤
+│ train_ann         │ 'instances_train2017_poly.json'           │
+├───────────────────┼───────────────────────────────────────────┤
+│ val_ann           │ 'instances_val2017_poly.json'             │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_ann          │ 'instances_test2017_poly.json'            │
+├───────────────────┼───────────────────────────────────────────┤
+│ mosaic_prob       │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ mixup_prob        │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ hsv_prob          │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ flip_prob         │ 0.5                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ degrees           │ 10.0                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ translate         │ 0.1                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ mosaic_scale      │ (0.1, 2)                                  │
+├───────────────────┼───────────────────────────────────────────┤
+│ enable_mixup      │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ mixup_scale       │ (0.5, 1.5)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ shear             │ 2.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ warmup_epochs     │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ max_epoch         │ 10                                        │
+├───────────────────┼───────────────────────────────────────────┤
+│ warmup_lr         │ 0                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ min_lr_ratio      │ 0.05                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ basic_lr_per_img  │ 0.00015625                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ scheduler         │ 'yoloxwarmcos'                            │
+├───────────────────┼───────────────────────────────────────────┤
+│ no_aug_epochs     │ 15                                        │
+├───────────────────┼───────────────────────────────────────────┤
+│ ema               │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ weight_decay      │ 0.0005                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ momentum          │ 0.9                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ save_history_ckpt │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ exp_name          │ 'yolox_thermal_cheetah_poly'              │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_size         │ (640, 640)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_conf         │ 0.01                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ nmsthre           │ 0.65                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ use_polygon       │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ train_name        │ 'train'                                   │
+├───────────────────┼───────────────────────────────────────────┤
+│ val_name          │ 'valid'                                   │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_name         │ 'test'                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ class_names       │ ['cheetah', 'person', 'other']            │
+╘═══════════════════╧═══════════════════════════════════════════╛
+2026-01-11 19:22:11.096 | INFO     | yolox.core.trainer:before_train:139 - Model Summary: Params: 8.94M, Gflops: 26.77
+2026-01-11 19:22:11.107 | INFO     | yolox.data.datasets.coco:__init__:65 - loading annotations into memory...
+2026-01-11 19:25:05.702 | INFO     | yolox.core.trainer:before_train:132 - args: <__main__.Args object at 0x00000201D7C363D0>
+2026-01-11 19:25:05.707 | INFO     | yolox.core.trainer:before_train:133 - exp value:
+╒═══════════════════╤═══════════════════════════════════════════╕
+│ keys              │ values                                    │
+╞═══════════════════╪═══════════════════════════════════════════╡
+│ seed              │ None                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ output_dir        │ './YOLOX_outputs'                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ print_interval    │ 1                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ eval_interval     │ 1                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ dataset           │ None                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ num_classes       │ 3                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ depth             │ 0.33                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ width             │ 0.5                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ act               │ 'silu'                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ data_num_workers  │ 4                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ input_size        │ (640, 640)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ multiscale_range  │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ data_dir          │ 'datasets/Thermal Cheetah.v1-square.coco' │
+├───────────────────┼───────────────────────────────────────────┤
+│ train_ann         │ 'instances_train2017_poly.json'           │
+├───────────────────┼───────────────────────────────────────────┤
+│ val_ann           │ 'instances_val2017_poly.json'             │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_ann          │ 'instances_test2017_poly.json'            │
+├───────────────────┼───────────────────────────────────────────┤
+│ mosaic_prob       │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ mixup_prob        │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ hsv_prob          │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ flip_prob         │ 0.5                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ degrees           │ 10.0                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ translate         │ 0.1                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ mosaic_scale      │ (0.1, 2)                                  │
+├───────────────────┼───────────────────────────────────────────┤
+│ enable_mixup      │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ mixup_scale       │ (0.5, 1.5)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ shear             │ 2.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ warmup_epochs     │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ max_epoch         │ 10                                        │
+├───────────────────┼───────────────────────────────────────────┤
+│ warmup_lr         │ 0                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ min_lr_ratio      │ 0.05                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ basic_lr_per_img  │ 0.00015625                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ scheduler         │ 'yoloxwarmcos'                            │
+├───────────────────┼───────────────────────────────────────────┤
+│ no_aug_epochs     │ 15                                        │
+├───────────────────┼───────────────────────────────────────────┤
+│ ema               │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ weight_decay      │ 0.0005                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ momentum          │ 0.9                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ save_history_ckpt │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ exp_name          │ 'yolox_thermal_cheetah_poly'              │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_size         │ (640, 640)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_conf         │ 0.01                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ nmsthre           │ 0.65                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ use_polygon       │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ train_name        │ 'train'                                   │
+├───────────────────┼───────────────────────────────────────────┤
+│ val_name          │ 'valid'                                   │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_name         │ 'test'                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ class_names       │ ['cheetah', 'person', 'other']            │
+╘═══════════════════╧═══════════════════════════════════════════╛
+2026-01-11 19:25:06.048 | INFO     | yolox.core.trainer:before_train:139 - Model Summary: Params: 8.94M, Gflops: 26.77
+2026-01-11 19:25:06.059 | INFO     | yolox.data.datasets.coco:__init__:65 - loading annotations into memory...
+2026-01-11 19:25:06.061 | INFO     | yolox.data.datasets.coco:__init__:65 - Done (t=0.00s)
+2026-01-11 19:25:06.062 | INFO     | pycocotools.coco:__init__:86 - creating index...
+2026-01-11 19:25:06.062 | INFO     | pycocotools.coco:__init__:86 - index created!
+2026-01-11 19:25:06.077 | INFO     | yolox.core.trainer:before_train:158 - init prefetcher, this might take one minute or less...
+2026-01-11 19:27:47.010 | INFO     | yolox.core.trainer:before_train:132 - args: <__main__.Args object at 0x00000201D79FEF10>
+2026-01-11 19:27:47.014 | INFO     | yolox.core.trainer:before_train:133 - exp value:
+╒═══════════════════╤═══════════════════════════════════════════╕
+│ keys              │ values                                    │
+╞═══════════════════╪═══════════════════════════════════════════╡
+│ seed              │ None                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ output_dir        │ './YOLOX_outputs'                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ print_interval    │ 1                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ eval_interval     │ 1                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ dataset           │ None                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ num_classes       │ 3                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ depth             │ 0.33                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ width             │ 0.5                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ act               │ 'silu'                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ data_num_workers  │ 4                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ input_size        │ (640, 640)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ multiscale_range  │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ data_dir          │ 'datasets/Thermal Cheetah.v1-square.coco' │
+├───────────────────┼───────────────────────────────────────────┤
+│ train_ann         │ 'instances_train2017_poly.json'           │
+├───────────────────┼───────────────────────────────────────────┤
+│ val_ann           │ 'instances_val2017_poly.json'             │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_ann          │ 'instances_test2017_poly.json'            │
+├───────────────────┼───────────────────────────────────────────┤
+│ mosaic_prob       │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ mixup_prob        │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ hsv_prob          │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ flip_prob         │ 0.5                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ degrees           │ 10.0                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ translate         │ 0.1                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ mosaic_scale      │ (0.1, 2)                                  │
+├───────────────────┼───────────────────────────────────────────┤
+│ enable_mixup      │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ mixup_scale       │ (0.5, 1.5)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ shear             │ 2.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ warmup_epochs     │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ max_epoch         │ 10                                        │
+├───────────────────┼───────────────────────────────────────────┤
+│ warmup_lr         │ 0                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ min_lr_ratio      │ 0.05                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ basic_lr_per_img  │ 0.00015625                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ scheduler         │ 'yoloxwarmcos'                            │
+├───────────────────┼───────────────────────────────────────────┤
+│ no_aug_epochs     │ 15                                        │
+├───────────────────┼───────────────────────────────────────────┤
+│ ema               │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ weight_decay      │ 0.0005                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ momentum          │ 0.9                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ save_history_ckpt │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ exp_name          │ 'yolox_thermal_cheetah_poly'              │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_size         │ (640, 640)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_conf         │ 0.01                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ nmsthre           │ 0.65                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ use_polygon       │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ train_name        │ 'train'                                   │
+├───────────────────┼───────────────────────────────────────────┤
+│ val_name          │ 'valid'                                   │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_name         │ 'test'                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ class_names       │ ['cheetah', 'person', 'other']            │
+╘═══════════════════╧═══════════════════════════════════════════╛
+2026-01-11 19:27:47.387 | INFO     | yolox.core.trainer:before_train:139 - Model Summary: Params: 8.94M, Gflops: 26.77
+2026-01-11 19:27:47.398 | INFO     | yolox.data.datasets.coco:__init__:65 - loading annotations into memory...
+2026-01-11 19:27:47.400 | INFO     | yolox.data.datasets.coco:__init__:65 - Done (t=0.00s)
+2026-01-11 19:27:47.401 | INFO     | pycocotools.coco:__init__:86 - creating index...
+2026-01-11 19:27:47.402 | INFO     | pycocotools.coco:__init__:86 - index created!
+2026-01-11 19:27:47.413 | INFO     | yolox.core.trainer:before_train:158 - init prefetcher, this might take one minute or less...
+2026-01-11 19:27:53.820 | INFO     | yolox.data.datasets.coco:__init__:65 - loading annotations into memory...
+2026-01-11 19:27:53.854 | INFO     | yolox.data.datasets.coco:__init__:65 - Done (t=0.03s)
+2026-01-11 19:27:53.854 | INFO     | pycocotools.coco:__init__:86 - creating index...
+2026-01-11 19:27:53.855 | INFO     | pycocotools.coco:__init__:86 - index created!
+2026-01-11 19:27:53.863 | INFO     | yolox.core.trainer:before_train:197 - Training start...
+2026-01-11 19:27:53.869 | INFO     | yolox.core.trainer:before_train:198 - 
+YOLOX(
+  (backbone): YOLOPAFPN(
+    (backbone): CSPDarknet(
+      (stem): Focus(
+        (conv): BaseConv(
+          (conv): Conv2d(12, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(32, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+          (act): SiLU(inplace=True)
+        )
+      )
+      (dark2): Sequential(
+        (0): BaseConv(
+          (conv): Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(64, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+          (act): SiLU(inplace=True)
+        )
+        (1): CSPLayer(
+          (conv1): BaseConv(
+            (conv): Conv2d(64, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(32, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (conv2): BaseConv(
+            (conv): Conv2d(64, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(32, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (conv3): BaseConv(
+            (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(64, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (m): Sequential(
+            (0): Bottleneck(
+              (conv1): BaseConv(
+                (conv): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(32, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+                (act): SiLU(inplace=True)
+              )
+              (conv2): BaseConv(
+                (conv): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(32, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+                (act): SiLU(inplace=True)
+              )
+            )
+          )
+        )
+      )
+      (dark3): Sequential(
+        (0): BaseConv(
+          (conv): Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+          (act): SiLU(inplace=True)
+        )
+        (1): CSPLayer(
+          (conv1): BaseConv(
+            (conv): Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(64, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (conv2): BaseConv(
+            (conv): Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(64, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (conv3): BaseConv(
+            (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (m): Sequential(
+            (0): Bottleneck(
+              (conv1): BaseConv(
+                (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+                (act): SiLU(inplace=True)
+              )
+              (conv2): BaseConv(
+                (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+                (act): SiLU(inplace=True)
+              )
+            )
+            (1): Bottleneck(
+              (conv1): BaseConv(
+                (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+                (act): SiLU(inplace=True)
+              )
+              (conv2): BaseConv(
+                (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+                (act): SiLU(inplace=True)
+              )
+            )
+            (2): Bottleneck(
+              (conv1): BaseConv(
+                (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+                (act): SiLU(inplace=True)
+              )
+              (conv2): BaseConv(
+                (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(64, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+                (act): SiLU(inplace=True)
+              )
+            )
+          )
+        )
+      )
+      (dark4): Sequential(
+        (0): BaseConv(
+          (conv): Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(256, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+          (act): SiLU(inplace=True)
+        )
+        (1): CSPLayer(
+          (conv1): BaseConv(
+            (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (conv2): BaseConv(
+            (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (conv3): BaseConv(
+            (conv): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(256, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (m): Sequential(
+            (0): Bottleneck(
+              (conv1): BaseConv(
+                (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+                (act): SiLU(inplace=True)
+              )
+              (conv2): BaseConv(
+                (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+                (act): SiLU(inplace=True)
+              )
+            )
+            (1): Bottleneck(
+              (conv1): BaseConv(
+                (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+                (act): SiLU(inplace=True)
+              )
+              (conv2): BaseConv(
+                (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+                (act): SiLU(inplace=True)
+              )
+            )
+            (2): Bottleneck(
+              (conv1): BaseConv(
+                (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+                (act): SiLU(inplace=True)
+              )
+              (conv2): BaseConv(
+                (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+                (act): SiLU(inplace=True)
+              )
+            )
+          )
+        )
+      )
+      (dark5): Sequential(
+        (0): BaseConv(
+          (conv): Conv2d(256, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(512, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+          (act): SiLU(inplace=True)
+        )
+        (1): SPPBottleneck(
+          (conv1): BaseConv(
+            (conv): Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(256, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (m): ModuleList(
+            (0): MaxPool2d(kernel_size=5, stride=1, padding=2, dilation=1, ceil_mode=False)
+            (1): MaxPool2d(kernel_size=9, stride=1, padding=4, dilation=1, ceil_mode=False)
+            (2): MaxPool2d(kernel_size=13, stride=1, padding=6, dilation=1, ceil_mode=False)
+          )
+          (conv2): BaseConv(
+            (conv): Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(512, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+        )
+        (2): CSPLayer(
+          (conv1): BaseConv(
+            (conv): Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(256, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (conv2): BaseConv(
+            (conv): Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(256, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (conv3): BaseConv(
+            (conv): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(512, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (m): Sequential(
+            (0): Bottleneck(
+              (conv1): BaseConv(
+                (conv): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): BatchNorm2d(256, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+                (act): SiLU(inplace=True)
+              )
+              (conv2): BaseConv(
+                (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                (bn): BatchNorm2d(256, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+                (act): SiLU(inplace=True)
+              )
+            )
+          )
+        )
+      )
+    )
+    (upsample): Upsample(scale_factor=2.0, mode='nearest')
+    (lateral_conv0): BaseConv(
+      (conv): Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn): BatchNorm2d(256, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+      (act): SiLU(inplace=True)
+    )
+    (C3_p4): CSPLayer(
+      (conv1): BaseConv(
+        (conv): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+        (act): SiLU(inplace=True)
+      )
+      (conv2): BaseConv(
+        (conv): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+        (act): SiLU(inplace=True)
+      )
+      (conv3): BaseConv(
+        (conv): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn): BatchNorm2d(256, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+        (act): SiLU(inplace=True)
+      )
+      (m): Sequential(
+        (0): Bottleneck(
+          (conv1): BaseConv(
+            (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (conv2): BaseConv(
+            (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+            (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+        )
+      )
+    )
+    (reduce_conv1): BaseConv(
+      (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+      (act): SiLU(inplace=True)
+    )
+    (C3_p3): CSPLayer(
+      (conv1): BaseConv(
+        (conv): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn): BatchNorm2d(64, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+        (act): SiLU(inplace=True)
+      )
+      (conv2): BaseConv(
+        (conv): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn): BatchNorm2d(64, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+        (act): SiLU(inplace=True)
+      )
+      (conv3): BaseConv(
+        (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+        (act): SiLU(inplace=True)
+      )
+      (m): Sequential(
+        (0): Bottleneck(
+          (conv1): BaseConv(
+            (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(64, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (conv2): BaseConv(
+            (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+            (bn): BatchNorm2d(64, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+        )
+      )
+    )
+    (bu_conv2): BaseConv(
+      (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+      (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+      (act): SiLU(inplace=True)
+    )
+    (C3_n3): CSPLayer(
+      (conv1): BaseConv(
+        (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+        (act): SiLU(inplace=True)
+      )
+      (conv2): BaseConv(
+        (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+        (act): SiLU(inplace=True)
+      )
+      (conv3): BaseConv(
+        (conv): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn): BatchNorm2d(256, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+        (act): SiLU(inplace=True)
+      )
+      (m): Sequential(
+        (0): Bottleneck(
+          (conv1): BaseConv(
+            (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (conv2): BaseConv(
+            (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+            (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+        )
+      )
+    )
+    (bu_conv1): BaseConv(
+      (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+      (bn): BatchNorm2d(256, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+      (act): SiLU(inplace=True)
+    )
+    (C3_n4): CSPLayer(
+      (conv1): BaseConv(
+        (conv): Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn): BatchNorm2d(256, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+        (act): SiLU(inplace=True)
+      )
+      (conv2): BaseConv(
+        (conv): Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn): BatchNorm2d(256, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+        (act): SiLU(inplace=True)
+      )
+      (conv3): BaseConv(
+        (conv): Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn): BatchNorm2d(512, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+        (act): SiLU(inplace=True)
+      )
+      (m): Sequential(
+        (0): Bottleneck(
+          (conv1): BaseConv(
+            (conv): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(256, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (conv2): BaseConv(
+            (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+            (bn): BatchNorm2d(256, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+        )
+      )
+    )
+  )
+  (head): YOLOXHead(
+    (cls_convs): ModuleList(
+      (0-2): 3 x Sequential(
+        (0): BaseConv(
+          (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+          (act): SiLU(inplace=True)
+        )
+        (1): BaseConv(
+          (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+          (act): SiLU(inplace=True)
+        )
+      )
+    )
+    (reg_convs): ModuleList(
+      (0-2): 3 x Sequential(
+        (0): BaseConv(
+          (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+          (act): SiLU(inplace=True)
+        )
+        (1): BaseConv(
+          (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+          (act): SiLU(inplace=True)
+        )
+      )
+    )
+    (cls_preds): ModuleList(
+      (0-2): 3 x Conv2d(128, 3, kernel_size=(1, 1), stride=(1, 1))
+    )
+    (reg_preds): ModuleList(
+      (0-2): 3 x Conv2d(128, 8, kernel_size=(1, 1), stride=(1, 1))
+    )
+    (obj_preds): ModuleList(
+      (0-2): 3 x Conv2d(128, 1, kernel_size=(1, 1), stride=(1, 1))
+    )
+    (stems): ModuleList(
+      (0): BaseConv(
+        (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+        (act): SiLU(inplace=True)
+      )
+      (1): BaseConv(
+        (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+        (act): SiLU(inplace=True)
+      )
+      (2): BaseConv(
+        (conv): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn): BatchNorm2d(128, eps=0.001, momentum=0.03, affine=True, track_running_stats=True)
+        (act): SiLU(inplace=True)
+      )
+    )
+    (l1_loss): L1Loss()
+    (bcewithlog_loss): BCEWithLogitsLoss()
+    (iou_loss): PolygonIOULoss()
+  )
+)
+2026-01-11 19:27:53.870 | INFO     | yolox.core.trainer:before_epoch:219 - ---> start train epoch1
+2026-01-11 19:27:53.870 | INFO     | yolox.core.trainer:before_epoch:222 - --->No mosaic aug now!
+2026-01-11 19:27:53.871 | INFO     | yolox.core.trainer:before_epoch:224 - --->Add additional L1 loss now!
+2026-01-11 19:27:58.610 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 1/45, gpu mem: 0Mb, mem: 13.3Gb, iter_time: 4.729s, data_time: 0.001s, total_loss: 104.9, iou_loss: 4.4, l1_loss: 28.5, conf_loss: 71.4, cls_loss: 0.5, lr: 6.173e-09, size: 640, ETA: 0:35:23
+2026-01-11 19:28:01.924 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 2/45, gpu mem: 0Mb, mem: 13.3Gb, iter_time: 3.293s, data_time: 0.003s, total_loss: 79.7, iou_loss: 5.0, l1_loss: 28.6, conf_loss: 45.7, cls_loss: 0.4, lr: 2.469e-08, size: 640, ETA: 0:29:56
+2026-01-11 19:28:04.976 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 3/45, gpu mem: 0Mb, mem: 13.3Gb, iter_time: 3.040s, data_time: 0.004s, total_loss: 69.5, iou_loss: 4.2, l1_loss: 10.9, conf_loss: 53.2, cls_loss: 1.3, lr: 5.556e-08, size: 640, ETA: 0:27:28
+2026-01-11 19:28:07.303 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 4/45, gpu mem: 0Mb, mem: 13.3Gb, iter_time: 2.316s, data_time: 0.001s, total_loss: 199.4, iou_loss: 0.0, l1_loss: 0.0, conf_loss: 199.4, cls_loss: 0.0, lr: 9.877e-08, size: 640, ETA: 0:24:51
+2026-01-11 19:28:09.912 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 5/45, gpu mem: 0Mb, mem: 13.4Gb, iter_time: 2.600s, data_time: 0.001s, total_loss: 113.6, iou_loss: 5.0, l1_loss: 35.7, conf_loss: 72.5, cls_loss: 0.3, lr: 1.543e-07, size: 640, ETA: 0:23:42
+2026-01-11 19:28:12.663 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 6/45, gpu mem: 0Mb, mem: 13.3Gb, iter_time: 2.741s, data_time: 0.001s, total_loss: 117.8, iou_loss: 5.0, l1_loss: 39.6, conf_loss: 73.2, cls_loss: 0.1, lr: 2.222e-07, size: 640, ETA: 0:23:05
+2026-01-11 19:28:15.182 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 7/45, gpu mem: 0Mb, mem: 13.3Gb, iter_time: 2.508s, data_time: 0.002s, total_loss: 206.6, iou_loss: 5.0, l1_loss: 98.2, conf_loss: 103.4, cls_loss: 0.1, lr: 3.025e-07, size: 640, ETA: 0:22:23
+2026-01-11 19:28:17.851 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 8/45, gpu mem: 0Mb, mem: 13.3Gb, iter_time: 2.658s, data_time: 0.000s, total_loss: 99.7, iou_loss: 4.7, l1_loss: 23.1, conf_loss: 71.5, cls_loss: 0.5, lr: 3.951e-07, size: 640, ETA: 0:21:59
+2026-01-11 19:28:20.784 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 9/45, gpu mem: 0Mb, mem: 13.3Gb, iter_time: 2.923s, data_time: 0.001s, total_loss: 75.6, iou_loss: 4.9, l1_loss: 14.6, conf_loss: 55.6, cls_loss: 0.5, lr: 5.000e-07, size: 640, ETA: 0:21:53
+2026-01-11 19:28:23.513 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 10/45, gpu mem: 0Mb, mem: 13.3Gb, iter_time: 2.719s, data_time: 0.002s, total_loss: 102.5, iou_loss: 5.0, l1_loss: 27.0, conf_loss: 70.2, cls_loss: 0.4, lr: 6.173e-07, size: 640, ETA: 0:21:39
+2026-01-11 19:28:27.303 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 11/45, gpu mem: 0Mb, mem: 13.6Gb, iter_time: 3.779s, data_time: 0.122s, total_loss: 95.3, iou_loss: 5.0, l1_loss: 21.0, conf_loss: 68.6, cls_loss: 0.7, lr: 7.469e-07, size: 736, ETA: 0:22:09
+2026-01-11 19:28:30.763 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 12/45, gpu mem: 0Mb, mem: 13.6Gb, iter_time: 3.452s, data_time: 0.028s, total_loss: 149.6, iou_loss: 5.0, l1_loss: 55.3, conf_loss: 89.2, cls_loss: 0.1, lr: 8.889e-07, size: 736, ETA: 0:22:21
+2026-01-11 19:28:34.467 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 13/45, gpu mem: 0Mb, mem: 13.6Gb, iter_time: 3.696s, data_time: 0.029s, total_loss: 96.6, iou_loss: 5.0, l1_loss: 23.5, conf_loss: 67.6, cls_loss: 0.5, lr: 1.043e-06, size: 736, ETA: 0:22:39
+2026-01-11 19:28:37.977 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 14/45, gpu mem: 0Mb, mem: 13.5Gb, iter_time: 3.502s, data_time: 0.027s, total_loss: 114.0, iou_loss: 4.9, l1_loss: 21.3, conf_loss: 86.7, cls_loss: 1.1, lr: 1.210e-06, size: 736, ETA: 0:22:48
+2026-01-11 19:28:42.060 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 15/45, gpu mem: 0Mb, mem: 13.6Gb, iter_time: 4.053s, data_time: 0.025s, total_loss: 67.7, iou_loss: 4.9, l1_loss: 17.8, conf_loss: 44.2, cls_loss: 0.7, lr: 1.389e-06, size: 736, ETA: 0:23:12
+2026-01-11 19:28:45.588 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 16/45, gpu mem: 0Mb, mem: 13.5Gb, iter_time: 3.522s, data_time: 0.030s, total_loss: 151.8, iou_loss: 5.0, l1_loss: 62.3, conf_loss: 84.4, cls_loss: 0.2, lr: 1.580e-06, size: 736, ETA: 0:23:17
+2026-01-11 19:28:48.985 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 17/45, gpu mem: 0Mb, mem: 13.6Gb, iter_time: 3.389s, data_time: 0.024s, total_loss: 113.1, iou_loss: 5.0, l1_loss: 24.3, conf_loss: 83.2, cls_loss: 0.6, lr: 1.784e-06, size: 736, ETA: 0:23:18
+2026-01-11 19:28:52.384 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 18/45, gpu mem: 0Mb, mem: 13.4Gb, iter_time: 3.387s, data_time: 0.025s, total_loss: 115.5, iou_loss: 5.0, l1_loss: 26.9, conf_loss: 83.3, cls_loss: 0.3, lr: 2.000e-06, size: 736, ETA: 0:23:19
+2026-01-11 19:28:55.622 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 19/45, gpu mem: 0Mb, mem: 13.4Gb, iter_time: 3.228s, data_time: 0.028s, total_loss: 190.1, iou_loss: 5.0, l1_loss: 62.5, conf_loss: 122.5, cls_loss: 0.0, lr: 2.228e-06, size: 736, ETA: 0:23:15
+2026-01-11 19:28:59.180 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 20/45, gpu mem: 0Mb, mem: 13.3Gb, iter_time: 3.548s, data_time: 0.027s, total_loss: 115.1, iou_loss: 4.9, l1_loss: 27.0, conf_loss: 82.7, cls_loss: 0.3, lr: 2.469e-06, size: 736, ETA: 0:23:19
+2026-01-11 19:29:01.827 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 21/45, gpu mem: 0Mb, mem: 13.4Gb, iter_time: 2.637s, data_time: 0.021s, total_loss: 83.3, iou_loss: 5.0, l1_loss: 37.5, conf_loss: 40.5, cls_loss: 0.2, lr: 2.722e-06, size: 576, ETA: 0:23:03
+2026-01-11 19:29:06.021 | INFO     | yolox.core.trainer:after_iter:271 - epoch: 1/10, iter: 22/45, gpu mem: 0Mb, mem: 13.3Gb, iter_time: 4.188s, data_time: 0.023s, total_loss: 44.0, iou_loss: 5.0, l1_loss: 15.9, conf_loss: 22.4, cls_loss: 0.6, lr: 2.988e-06, size: 576, ETA: 0:23:18
+2026-01-11 19:29:08.043 | INFO     | yolox.core.trainer:after_train:201 - Training of experiment is done and the best AP is 0.00

@@ -37,6 +37,8 @@ def occupy_mem(cuda_device, mem_ratio=0.9):
     """
     pre-allocate gpu memory for training to avoid memory Fragmentation.
     """
+    if not torch.cuda.is_available():
+        return
     total, used = get_total_and_free_memory_in_Mb(cuda_device)
     max_mem = int(total * mem_ratio)
     block_mem = max_mem - used
@@ -49,6 +51,8 @@ def gpu_mem_usage():
     """
     Compute the GPU memory usage for the current device (MB).
     """
+    if not torch.cuda.is_available():
+        return 0
     mem_usage_bytes = torch.cuda.max_memory_allocated()
     return mem_usage_bytes / (1024 * 1024)
 

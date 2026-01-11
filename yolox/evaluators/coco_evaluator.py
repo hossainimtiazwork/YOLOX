@@ -132,7 +132,7 @@ class COCOEvaluator:
             summary (sr): summary info of evaluation.
         """
         # TODO half to amp_test
-        tensor_type = torch.cuda.HalfTensor if half else torch.cuda.FloatTensor
+        device = next(model.parameters()).device
         model = model.eval()
         if half:
             model = model.half()
@@ -151,7 +151,7 @@ class COCOEvaluator:
             model_trt = TRTModule()
             model_trt.load_state_dict(torch.load(trt_file))
 
-            x = torch.ones(1, 3, test_size[0], test_size[1]).cuda()
+            x = torch.ones(1, 3, test_size[0], test_size[1]).to(device)
             model(x)
             model = model_trt
 
@@ -159,7 +159,8 @@ class COCOEvaluator:
             progress_bar(self.dataloader)
         ):
             with torch.no_grad():
-                imgs = imgs.type(tensor_type)
+                imgs = imgs.to(device)
+                imgs = imgs.half() if half else imgs.float()
 
                 # skip the last iters since batchsize might be not enough for batch inference
                 is_time_record = cur_iter < len(self.dataloader) - 1
@@ -186,7 +187,7 @@ class COCOEvaluator:
             data_list.extend(data_list_elem)
             output_data.update(image_wise_data)
 
-        statistics = torch.cuda.FloatTensor([inference_time, nms_time, n_samples])
+        statistics = torch.tensor([inference_time, nms_time, n_samples]).to(device)
         if distributed:
             # different process/device might have different speed,
             # to make sure the process will not be stucked, sync func is used here.
@@ -293,11 +294,19 @@ class COCOEvaluator:
             try:
                 from yolox.layers import COCOeval_opt as COCOeval
             except ImportError:
+                COCOeval = None
+
+            if COCOeval is not None:
+                try:
+                    cocoEval = COCOeval(cocoGt, cocoDt, annType[1])
+                except Exception:
+                    logger.warning("Failed to use optimized COCOeval, falling back to standard.")
+                    COCOeval = None
+
+            if COCOeval is None:
                 from pycocotools.cocoeval import COCOeval
-
                 logger.warning("Use standard COCOeval.")
-
-            cocoEval = COCOeval(cocoGt, cocoDt, annType[1])
+                cocoEval = COCOeval(cocoGt, cocoDt, annType[1])
             cocoEval.evaluate()
             cocoEval.accumulate()
             redirect_string = io.StringIO()

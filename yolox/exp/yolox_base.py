@@ -108,6 +108,11 @@ class Exp(BaseExp):
         # nms threshold
         self.nmsthre = 0.65
 
+        # -----------------  polygon config ------------------ #
+        # Whether to use 4-point polygon bounding boxes (8 coordinates)
+        # instead of standard axis-aligned boxes (4 coordinates: cx, cy, w, h)
+        self.use_polygon = False
+
     def get_model(self):
         from yolox.models import YOLOX, YOLOPAFPN, YOLOXHead
 
@@ -120,7 +125,13 @@ class Exp(BaseExp):
         if getattr(self, "model", None) is None:
             in_channels = [256, 512, 1024]
             backbone = YOLOPAFPN(self.depth, self.width, in_channels=in_channels, act=self.act)
-            head = YOLOXHead(self.num_classes, self.width, in_channels=in_channels, act=self.act)
+            head = YOLOXHead(
+                self.num_classes,
+                self.width,
+                in_channels=in_channels,
+                act=self.act,
+                use_polygon=self.use_polygon,
+            )
             self.model = YOLOX(backbone, head)
 
         self.model.apply(init_yolo)
@@ -146,10 +157,12 @@ class Exp(BaseExp):
             preproc=TrainTransform(
                 max_labels=50,
                 flip_prob=self.flip_prob,
-                hsv_prob=self.hsv_prob
+                hsv_prob=self.hsv_prob,
+                use_polygon=self.use_polygon,
             ),
             cache=cache,
             cache_type=cache_type,
+            use_polygon=self.use_polygon,
         )
 
     def get_data_loader(self, batch_size, is_distributed, no_aug=False, cache_img: str = None):
@@ -187,7 +200,9 @@ class Exp(BaseExp):
             preproc=TrainTransform(
                 max_labels=120,
                 flip_prob=self.flip_prob,
-                hsv_prob=self.hsv_prob),
+                hsv_prob=self.hsv_prob,
+                use_polygon=self.use_polygon,
+            ),
             degrees=self.degrees,
             translate=self.translate,
             mosaic_scale=self.mosaic_scale,
@@ -196,6 +211,7 @@ class Exp(BaseExp):
             enable_mixup=self.enable_mixup,
             mosaic_prob=self.mosaic_prob,
             mixup_prob=self.mixup_prob,
+            use_polygon=self.use_polygon,
         )
 
         if is_distributed:
@@ -222,7 +238,8 @@ class Exp(BaseExp):
         return train_loader
 
     def random_resize(self, data_loader, epoch, rank, is_distributed):
-        tensor = torch.LongTensor(2).cuda()
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        tensor = torch.LongTensor(2).to(device)
 
         if rank == 0:
             size_factor = self.input_size[1] * 1.0 / self.input_size[0]
@@ -307,6 +324,7 @@ class Exp(BaseExp):
             name="val2017" if not testdev else "test2017",
             img_size=self.test_size,
             preproc=ValTransform(legacy=legacy),
+            use_polygon=self.use_polygon,
         )
 
     def get_eval_loader(self, batch_size, is_distributed, **kwargs):

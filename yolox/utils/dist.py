@@ -10,6 +10,7 @@ This is useful when doing distributed training.
 """
 
 import functools
+import contextlib
 import os
 import pickle
 import time
@@ -39,13 +40,9 @@ _LOCAL_PROCESS_GROUP = None
 
 
 def get_num_devices():
-    gpu_list = os.getenv('CUDA_VISIBLE_DEVICES', None)
-    if gpu_list is not None:
-        return len(gpu_list.split(','))
-    else:
-        devices_list_info = os.popen("nvidia-smi -L")
-        devices_list_info = devices_list_info.read().strip().split("\n")
-        return len(devices_list_info)
+    if torch.cuda.is_available():
+        return torch.cuda.device_count()
+    return 0
 
 
 @contextmanager
@@ -289,6 +286,6 @@ def shared_random_seed():
 
 def time_synchronized():
     """pytorch-accurate time"""
-    if torch.cuda.is_available():
+    if torch.cuda.is_available() and torch.cuda.is_initialized():
         torch.cuda.synchronize()
     return time.time()

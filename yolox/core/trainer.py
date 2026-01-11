@@ -2,6 +2,7 @@
 # Copyright (c) Megvii, Inc. and its affiliates.
 
 import datetime
+import contextlib
 import os
 import time
 from loguru import logger
@@ -43,12 +44,15 @@ class Trainer:
 
         # training related attr
         self.max_epoch = exp.max_epoch
-        self.amp_training = args.fp16
-        self.scaler = torch.cuda.amp.GradScaler(enabled=args.fp16)
+        self.amp_training = args.fp16 if torch.cuda.is_available() else False
+        if self.amp_training:
+            self.scaler = torch.cuda.amp.GradScaler(enabled=True)
+        else:
+            self.scaler = None
         self.is_distributed = get_world_size() > 1
         self.rank = get_rank()
         self.local_rank = get_local_rank()
-        self.device = "cuda:{}".format(self.local_rank)
+        self.device = "cuda:{}".format(self.local_rank) if torch.cuda.is_available() else "cpu"
         self.use_model_ema = exp.ema
         self.save_history_ckpt = exp.save_history_ckpt
 
@@ -103,15 +107,20 @@ class Trainer:
         inps, targets = self.exp.preprocess(inps, targets, self.input_size)
         data_end_time = time.time()
 
-        with torch.cuda.amp.autocast(enabled=self.amp_training):
+        context_manager = torch.cuda.amp.autocast(enabled=True) if self.amp_training else contextlib.nullcontext()
+        with context_manager:
             outputs = self.model(inps, targets)
 
         loss = outputs["total_loss"]
 
         self.optimizer.zero_grad()
-        self.scaler.scale(loss).backward()
-        self.scaler.step(self.optimizer)
-        self.scaler.update()
+        if self.scaler is not None:
+            self.scaler.scale(loss).backward()
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
+        else:
+            loss.backward()
+            self.optimizer.step()
 
         if self.use_model_ema:
             self.ema_model.update(self.model)
@@ -133,7 +142,8 @@ class Trainer:
         logger.info("exp value:\n{}".format(self.exp))
 
         # model related init
-        torch.cuda.set_device(self.local_rank)
+        if torch.cuda.is_available():
+            torch.cuda.set_device(self.local_rank)
         model = self.exp.get_model()
         logger.info(
             "Model Summary: {}".format(get_model_info(model, self.exp.test_size))
@@ -162,7 +172,7 @@ class Trainer:
         self.lr_scheduler = self.exp.get_lr_scheduler(
             self.exp.basic_lr_per_img * self.args.batch_size, self.max_iter
         )
-        if self.args.occupy:
+        if self.args.occupy and torch.cuda.is_available():
             occupy_mem(self.local_rank)
 
         if self.is_distributed:

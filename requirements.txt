@@ -10,6 +10,8 @@ ninja
 tabulate
 psutil
 tensorboard
+matplotlib
+ipywidgets
 
 # verified versions
 # pycocotools corresponds to https://github.com/ppwwyyxx/cocoapi

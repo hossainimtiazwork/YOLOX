@@ -1,0 +1,153 @@
+2026-01-11 19:01:05.576 | INFO     | yolox.core.trainer:before_train:132 - args: Namespace(experiment_name='test_run', name=None, dist_backend='nccl', dist_url=None, batch_size=2, devices=None, exp_file='exps/example/yolox_thermal_cheetah_poly.py', resume=False, ckpt='yolox_s.pth', start_epoch=None, num_machines=1, machine_rank=0, fp16=False, cache=None, occupy=True, logger='tensorboard', opts=[])
+2026-01-11 19:01:05.580 | INFO     | yolox.core.trainer:before_train:133 - exp value:
+╒═══════════════════╤═══════════════════════════════════════════╕
+│ keys              │ values                                    │
+╞═══════════════════╪═══════════════════════════════════════════╡
+│ seed              │ None                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ output_dir        │ './YOLOX_outputs'                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ print_interval    │ 1                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ eval_interval     │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ dataset           │ None                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ num_classes       │ 3                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ depth             │ 0.33                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ width             │ 0.5                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ act               │ 'silu'                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ data_num_workers  │ 4                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ input_size        │ (640, 640)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ multiscale_range  │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ data_dir          │ 'datasets/Thermal Cheetah.v1-square.coco' │
+├───────────────────┼───────────────────────────────────────────┤
+│ train_ann         │ 'instances_train2017_poly.json'           │
+├───────────────────┼───────────────────────────────────────────┤
+│ val_ann           │ 'instances_val2017_poly.json'             │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_ann          │ 'instances_test2017_poly.json'            │
+├───────────────────┼───────────────────────────────────────────┤
+│ mosaic_prob       │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ mixup_prob        │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ hsv_prob          │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ flip_prob         │ 0.5                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ degrees           │ 10.0                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ translate         │ 0.1                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ mosaic_scale      │ (0.1, 2)                                  │
+├───────────────────┼───────────────────────────────────────────┤
+│ enable_mixup      │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ mixup_scale       │ (0.5, 1.5)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ shear             │ 2.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ warmup_epochs     │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ max_epoch         │ 10                                        │
+├───────────────────┼───────────────────────────────────────────┤
+│ warmup_lr         │ 0                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ min_lr_ratio      │ 0.05                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ basic_lr_per_img  │ 0.00015625                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ scheduler         │ 'yoloxwarmcos'                            │
+├───────────────────┼───────────────────────────────────────────┤
+│ no_aug_epochs     │ 15                                        │
+├───────────────────┼───────────────────────────────────────────┤
+│ ema               │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ weight_decay      │ 0.0005                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ momentum          │ 0.9                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ save_history_ckpt │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ exp_name          │ 'yolox_thermal_cheetah_poly'              │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_size         │ (640, 640)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_conf         │ 0.01                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ nmsthre           │ 0.65                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ use_polygon       │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ train_name        │ 'train'                                   │
+├───────────────────┼───────────────────────────────────────────┤
+│ val_name          │ 'valid'                                   │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_name         │ 'test'                                    │
+╘═══════════════════╧═══════════════════════════════════════════╛
+2026-01-11 19:01:06.370 | INFO     | yolox.core.trainer:before_train:139 - Model Summary: Params: 8.94M, Gflops: 26.77
+2026-01-11 19:01:06.383 | INFO     | yolox.core.trainer:resume_train:339 - loading checkpoint for fine tuning
+2026-01-11 19:01:06.388 | ERROR    | yolox.core.launch:launch:98 - An error has been caught in function 'launch', process 'MainProcess' (2796), thread 'MainThread' (23900):
+Traceback (most recent call last):
+
+  File "D:\YOLOX\tools\train.py", line 138, in <module>
+    launch(
+    └ <function launch at 0x00000201D206CC20>
+
+> File "d:\YOLOX\yolox\core\launch.py", line 98, in launch
+    main_func(*args)
+    │          └ (╒═══════════════════╤═══════════════════════════════════════════════════════════════════════════════════════════════════════...
+    └ <function main at 0x00000201B8486200>
+
+  File "D:\YOLOX\tools\train.py", line 118, in main
+    trainer.train()
+    │       └ <function Trainer.train at 0x00000201D05A8860>
+    └ <yolox.core.trainer.Trainer object at 0x00000201D643D5D0>
+
+  File "d:\YOLOX\yolox\core\trainer.py", line 75, in train
+    self.before_train()
+    │    └ <function Trainer.before_train at 0x00000201D64BE520>
+    └ <yolox.core.trainer.Trainer object at 0x00000201D643D5D0>
+
+  File "d:\YOLOX\yolox\core\trainer.py", line 148, in before_train
+    model = self.resume_train(model)
+            │    │            └ YOLOX(
+            │    │                (backbone): YOLOPAFPN(
+            │    │                  (backbone): CSPDarknet(
+            │    │                    (stem): Focus(
+            │    │                      (conv): BaseConv(
+            │    │                        (conv): ...
+            │    └ <function Trainer.resume_train at 0x00000201D64BE980>
+            └ <yolox.core.trainer.Trainer object at 0x00000201D643D5D0>
+
+  File "d:\YOLOX\yolox\core\trainer.py", line 341, in resume_train
+    ckpt = torch.load(ckpt_file, map_location=self.device)["model"]
+           │     │    │                       │    └ 'cpu'
+           │     │    │                       └ <yolox.core.trainer.Trainer object at 0x00000201D643D5D0>
+           │     │    └ 'yolox_s.pth'
+           │     └ <function load at 0x00000201CDCCF2E0>
+           └ <module 'torch' from 'D:\\YOLOX\\.venv\\Lib\\site-packages\\torch\\__init__.py'>
+
+  File "D:\YOLOX\.venv\Lib\site-packages\torch\serialization.py", line 1484, in load
+    with _open_file_like(f, "rb") as opened_file:
+         │               └ 'yolox_s.pth'
+         └ <function _open_file_like at 0x00000201CDCCE3E0>
+  File "D:\YOLOX\.venv\Lib\site-packages\torch\serialization.py", line 759, in _open_file_like
+    return _open_file(name_or_buffer, mode)
+           │          │               └ 'rb'
+           │          └ 'yolox_s.pth'
+           └ <class 'torch.serialization._open_file'>
+  File "D:\YOLOX\.venv\Lib\site-packages\torch\serialization.py", line 740, in __init__
+    super().__init__(open(name, mode))
+                          │     └ 'rb'
+                          └ 'yolox_s.pth'
+
+FileNotFoundError: [Errno 2] No such file or directory: 'yolox_s.pth'
