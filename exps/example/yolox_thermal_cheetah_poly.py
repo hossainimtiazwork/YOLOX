@@ -24,9 +24,9 @@ class Exp(MyExp):
         self.test_ann = "instances_test2017_poly.json"
         
         # Helper to set correct folder names if Roboflow uses different names
-        self.train_name = "train"
-        self.val_name = "valid"
-        self.test_name = "test"
+        self.train_name = "train2017"
+        self.val_name = "val2017"
+        self.test_name = "test2017"
 
         # ---------------- training settings ---------------- #
         self.max_epoch = 10         # Small test run
