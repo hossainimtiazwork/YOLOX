@@ -65,6 +65,8 @@ class Exp(BaseExp):
         self.mixup_scale = (0.5, 1.5)
         # shear angle range, for example, if set to 2, the true range is (-2, 2)
         self.shear = 2.0
+        # support polygon bounding box
+        self.use_polygon = False
 
         # --------------  training config --------------------- #
         # epoch number used for warmup
@@ -120,7 +122,7 @@ class Exp(BaseExp):
         if getattr(self, "model", None) is None:
             in_channels = [256, 512, 1024]
             backbone = YOLOPAFPN(self.depth, self.width, in_channels=in_channels, act=self.act)
-            head = YOLOXHead(self.num_classes, self.width, in_channels=in_channels, act=self.act)
+            head = YOLOXHead(self.num_classes, self.width, in_channels=in_channels, act=self.act, use_polygon=self.use_polygon)
             self.model = YOLOX(backbone, head)
 
         self.model.apply(init_yolo)
@@ -146,7 +148,8 @@ class Exp(BaseExp):
             preproc=TrainTransform(
                 max_labels=50,
                 flip_prob=self.flip_prob,
-                hsv_prob=self.hsv_prob
+                hsv_prob=self.hsv_prob,
+                use_polygon=self.use_polygon
             ),
             cache=cache,
             cache_type=cache_type,
@@ -187,7 +190,8 @@ class Exp(BaseExp):
             preproc=TrainTransform(
                 max_labels=120,
                 flip_prob=self.flip_prob,
-                hsv_prob=self.hsv_prob),
+                hsv_prob=self.hsv_prob,
+                use_polygon=self.use_polygon),
             degrees=self.degrees,
             translate=self.translate,
             mosaic_scale=self.mosaic_scale,
@@ -196,6 +200,7 @@ class Exp(BaseExp):
             enable_mixup=self.enable_mixup,
             mosaic_prob=self.mosaic_prob,
             mixup_prob=self.mixup_prob,
+            use_polygon=self.use_polygon,
         )
 
         if is_distributed:
@@ -306,7 +311,7 @@ class Exp(BaseExp):
             json_file=self.val_ann if not testdev else self.test_ann,
             name="val2017" if not testdev else "test2017",
             img_size=self.test_size,
-            preproc=ValTransform(legacy=legacy),
+            preproc=ValTransform(legacy=legacy, use_polygon=self.use_polygon),
         )
 
     def get_eval_loader(self, batch_size, is_distributed, **kwargs):
