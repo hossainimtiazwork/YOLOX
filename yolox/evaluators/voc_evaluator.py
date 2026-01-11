@@ -58,10 +58,6 @@ class VOCEvaluator:
         """
         # TODO half to amp_test
         device = next(model.parameters()).device
-        if half:
-            tensor_type = torch.HalfTensor if device.type == "cpu" else torch.cuda.HalfTensor
-        else:
-            tensor_type = torch.FloatTensor if device.type == "cpu" else torch.cuda.FloatTensor
         model = model.eval()
         if half:
             model = model.half()
@@ -85,7 +81,8 @@ class VOCEvaluator:
 
         for cur_iter, (imgs, _, info_imgs, ids) in enumerate(progress_bar(self.dataloader)):
             with torch.no_grad():
-                imgs = imgs.type(tensor_type)
+                imgs = imgs.to(device)
+                imgs = imgs.half() if half else imgs.float()
 
                 # skip the last iters since batchsize might be not enough for batch inference
                 is_time_record = cur_iter < len(self.dataloader) - 1
