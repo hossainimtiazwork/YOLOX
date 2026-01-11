@@ -34,6 +34,8 @@ class Exp(MyExp):
         self.eval_interval = 5
         self.input_size = (640, 640)
         self.test_size = (640, 640)
+        self.test_conf = 0.05
+        self.nmsthre = 0.3
 
     def get_dataset(self, cache: bool = False, cache_type: str = "ram"):
         from yolox.data import COCODataset, TrainTransform
