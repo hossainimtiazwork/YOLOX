@@ -45,6 +45,7 @@ class COCODataset(CacheDataset):
         preproc=None,
         cache=False,
         cache_type="ram",
+        use_polygon=False,
     ):
         """
         COCO dataset initialization. Annotation data are read into memory by COCO API.
@@ -59,6 +60,7 @@ class COCODataset(CacheDataset):
             data_dir = os.path.join(get_yolox_datadir(), "COCO")
         self.data_dir = data_dir
         self.json_file = json_file
+        self.use_polygon = use_polygon
 
         self.coco = COCO(os.path.join(self.data_dir, "annotations", self.json_file))
         remove_useless_info(self.coco)
@@ -106,15 +108,25 @@ class COCODataset(CacheDataset):
                 objs.append(obj)
 
         num_objs = len(objs)
+        reg_dim = 8 if self.use_polygon else 4
+        res = np.zeros((num_objs, reg_dim + 1))
 
-        res = np.zeros((num_objs, 5))
         for ix, obj in enumerate(objs):
             cls = self.class_ids.index(obj["category_id"])
-            res[ix, 0:4] = obj["clean_bbox"]
-            res[ix, 4] = cls
+            if self.use_polygon:
+                if "polygon" in obj:
+                    res[ix, 0:8] = obj["polygon"]
+                else:
+                    # Fallback: convert bbox to 4 corners
+                    x1, y1, x2, y2 = obj["clean_bbox"]
+                    res[ix, 0:8] = [x1, y1, x2, y1, x2, y2, x1, y2]
+                res[ix, 8] = cls
+            else:
+                res[ix, 0:4] = obj["clean_bbox"]
+                res[ix, 4] = cls
 
         r = min(self.img_size[0] / height, self.img_size[1] / width)
-        res[:, :4] *= r
+        res[:, :reg_dim] *= r
 
         img_info = (height, width)
         resized_info = (int(height * r), int(width * r))
@@ -172,7 +184,7 @@ class COCODataset(CacheDataset):
         Returns:
             img (numpy.ndarray): pre-processed image
             padded_labels (torch.Tensor): pre-processed label data.
-                The shape is :math:`[max_labels, 5]`.
+                The shape is :math:`[max_labels, 5]` or :math:`[max_labels, 9]` depending on use_polygon.
                 each label consists of [class, xc, yc, w, h]:
                     class (float): class index.
                     xc, yc (float) : center of bbox whose values range from 0 to 1.

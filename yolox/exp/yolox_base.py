@@ -162,6 +162,7 @@ class Exp(BaseExp):
             ),
             cache=cache,
             cache_type=cache_type,
+            use_polygon=self.use_polygon,
         )
 
     def get_data_loader(self, batch_size, is_distributed, no_aug=False, cache_img: str = None):
@@ -322,6 +323,7 @@ class Exp(BaseExp):
             name="val2017" if not testdev else "test2017",
             img_size=self.test_size,
             preproc=ValTransform(legacy=legacy),
+            use_polygon=self.use_polygon,
         )
 
     def get_eval_loader(self, batch_size, is_distributed, **kwargs):
