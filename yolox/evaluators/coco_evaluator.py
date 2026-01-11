@@ -294,11 +294,19 @@ class COCOEvaluator:
             try:
                 from yolox.layers import COCOeval_opt as COCOeval
             except ImportError:
+                COCOeval = None
+
+            if COCOeval is not None:
+                try:
+                    cocoEval = COCOeval(cocoGt, cocoDt, annType[1])
+                except Exception:
+                    logger.warning("Failed to use optimized COCOeval, falling back to standard.")
+                    COCOeval = None
+
+            if COCOeval is None:
                 from pycocotools.cocoeval import COCOeval
-
                 logger.warning("Use standard COCOeval.")
-
-            cocoEval = COCOeval(cocoGt, cocoDt, annType[1])
+                cocoEval = COCOeval(cocoGt, cocoDt, annType[1])
             cocoEval.evaluate()
             cocoEval.accumulate()
             redirect_string = io.StringIO()
