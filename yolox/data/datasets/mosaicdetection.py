@@ -41,7 +41,7 @@ class MosaicDetection(Dataset):
         self, dataset, img_size, mosaic=True, preproc=None,
         degrees=10.0, translate=0.1, mosaic_scale=(0.5, 1.5),
         mixup_scale=(0.5, 1.5), shear=2.0, enable_mixup=True,
-        mosaic_prob=1.0, mixup_prob=1.0, *args
+        mosaic_prob=1.0, mixup_prob=1.0, use_polygon=False, *args
     ):
         """
 
@@ -56,6 +56,7 @@ class MosaicDetection(Dataset):
             mixup_scale (tuple):
             shear (float):
             enable_mixup (bool):
+            use_polygon (bool): whether to use polygon (8-coord) bounding boxes.
             *args(tuple) : Additional arguments for mixup random sampler.
         """
         super().__init__(img_size, mosaic=mosaic)
@@ -71,6 +72,9 @@ class MosaicDetection(Dataset):
         self.mosaic_prob = mosaic_prob
         self.mixup_prob = mixup_prob
         self.local_rank = get_local_rank()
+        self.use_polygon = use_polygon
+        # Number of box coordinates: 8 for polygon, 4 for standard
+        self.box_coords = 8 if use_polygon else 4
 
     def __len__(self):
         return len(self._dataset)
@@ -110,30 +114,55 @@ class MosaicDetection(Dataset):
                 padw, padh = l_x1 - s_x1, l_y1 - s_y1
 
                 labels = _labels.copy()
-                # Normalized xywh to pixel xyxy format
+                # Transform coordinates: scale and pad
                 if _labels.size > 0:
-                    labels[:, 0] = scale * _labels[:, 0] + padw
-                    labels[:, 1] = scale * _labels[:, 1] + padh
-                    labels[:, 2] = scale * _labels[:, 2] + padw
-                    labels[:, 3] = scale * _labels[:, 3] + padh
+                    if self.use_polygon:
+                        # 8 coordinates: scale all x (even indices) and y (odd indices)
+                        for i in range(4):
+                            labels[:, 2*i] = scale * _labels[:, 2*i] + padw  # x coords
+                            labels[:, 2*i+1] = scale * _labels[:, 2*i+1] + padh  # y coords
+                    else:
+                        # 4 coordinates: xyxy format
+                        labels[:, 0] = scale * _labels[:, 0] + padw
+                        labels[:, 1] = scale * _labels[:, 1] + padh
+                        labels[:, 2] = scale * _labels[:, 2] + padw
+                        labels[:, 3] = scale * _labels[:, 3] + padh
                 mosaic_labels.append(labels)
 
             if len(mosaic_labels):
                 mosaic_labels = np.concatenate(mosaic_labels, 0)
-                np.clip(mosaic_labels[:, 0], 0, 2 * input_w, out=mosaic_labels[:, 0])
-                np.clip(mosaic_labels[:, 1], 0, 2 * input_h, out=mosaic_labels[:, 1])
-                np.clip(mosaic_labels[:, 2], 0, 2 * input_w, out=mosaic_labels[:, 2])
-                np.clip(mosaic_labels[:, 3], 0, 2 * input_h, out=mosaic_labels[:, 3])
+                if self.use_polygon:
+                    # Clip all x coordinates (even indices)
+                    for i in range(4):
+                        np.clip(mosaic_labels[:, 2*i], 0, 2 * input_w, out=mosaic_labels[:, 2*i])
+                        np.clip(mosaic_labels[:, 2*i+1], 0, 2 * input_h, out=mosaic_labels[:, 2*i+1])
+                else:
+                    np.clip(mosaic_labels[:, 0], 0, 2 * input_w, out=mosaic_labels[:, 0])
+                    np.clip(mosaic_labels[:, 1], 0, 2 * input_h, out=mosaic_labels[:, 1])
+                    np.clip(mosaic_labels[:, 2], 0, 2 * input_w, out=mosaic_labels[:, 2])
+                    np.clip(mosaic_labels[:, 3], 0, 2 * input_h, out=mosaic_labels[:, 3])
 
-            mosaic_img, mosaic_labels = random_affine(
-                mosaic_img,
-                mosaic_labels,
-                target_size=(input_w, input_h),
-                degrees=self.degrees,
-                translate=self.translate,
-                scales=self.scale,
-                shear=self.shear,
-            )
+            if self.use_polygon:
+                # For polygon mode, use polygon-aware affine or skip complex transforms
+                mosaic_img, mosaic_labels = self._random_affine_polygon(
+                    mosaic_img,
+                    mosaic_labels,
+                    target_size=(input_w, input_h),
+                    degrees=self.degrees,
+                    translate=self.translate,
+                    scales=self.scale,
+                    shear=self.shear,
+                )
+            else:
+                mosaic_img, mosaic_labels = random_affine(
+                    mosaic_img,
+                    mosaic_labels,
+                    target_size=(input_w, input_h),
+                    degrees=self.degrees,
+                    translate=self.translate,
+                    scales=self.scale,
+                    shear=self.shear,
+                )
 
             # -----------------------------------------------------------------
             # CopyPaste: https://arxiv.org/abs/2012.07177
@@ -158,6 +187,38 @@ class MosaicDetection(Dataset):
             img, label, img_info, img_id = self._dataset.pull_item(idx)
             img, label = self.preproc(img, label, self.input_dim)
             return img, label, img_info, img_id
+
+    def _random_affine_polygon(
+        self, img, targets, target_size, degrees=10, translate=0.1, scales=0.1, shear=10
+    ):
+        """
+        Apply random affine transformation for polygon annotations.
+        For simplicity, we only apply scaling and translation (no rotation/shear).
+        """
+        from ..data_augment import get_affine_matrix
+
+        M, scale = get_affine_matrix(target_size, degrees, translate, scales, shear)
+        img = cv2.warpAffine(img, M, dsize=target_size, borderValue=(114, 114, 114))
+
+        if len(targets) > 0:
+            num_gts = len(targets)
+            # Transform all 4 points
+            # targets has shape (N, 8 + class) where 8 is polygon coords
+            points = np.ones((num_gts * 4, 3))
+            for i in range(4):
+                points[i*num_gts:(i+1)*num_gts, 0] = targets[:, 2*i]  # x
+                points[i*num_gts:(i+1)*num_gts, 1] = targets[:, 2*i+1]  # y
+
+            # Apply affine transform
+            points = points @ M.T
+
+            # Reshape back
+            twidth, theight = target_size
+            for i in range(4):
+                targets[:, 2*i] = np.clip(points[i*num_gts:(i+1)*num_gts, 0], 0, twidth)
+                targets[:, 2*i+1] = np.clip(points[i*num_gts:(i+1)*num_gts, 1], 0, theight)
+
+        return img, targets
 
     def mixup(self, origin_img, origin_labels, input_dim):
         jit_factor = random.uniform(*self.mixup_scale)
@@ -209,22 +270,39 @@ class MosaicDetection(Dataset):
             y_offset: y_offset + target_h, x_offset: x_offset + target_w
         ]
 
-        cp_bboxes_origin_np = adjust_box_anns(
-            cp_labels[:, :4].copy(), cp_scale_ratio, 0, 0, origin_w, origin_h
-        )
-        if FLIP:
-            cp_bboxes_origin_np[:, 0::2] = (
-                origin_w - cp_bboxes_origin_np[:, 0::2][:, ::-1]
+        if self.use_polygon:
+            # Handle 8-coordinate polygon boxes
+            cp_bboxes_origin_np = adjust_box_anns(
+                cp_labels[:, :8].copy(), cp_scale_ratio, 0, 0, origin_w, origin_h
             )
-        cp_bboxes_transformed_np = cp_bboxes_origin_np.copy()
-        cp_bboxes_transformed_np[:, 0::2] = np.clip(
-            cp_bboxes_transformed_np[:, 0::2] - x_offset, 0, target_w
-        )
-        cp_bboxes_transformed_np[:, 1::2] = np.clip(
-            cp_bboxes_transformed_np[:, 1::2] - y_offset, 0, target_h
-        )
+            if FLIP:
+                # Flip all x coordinates
+                cp_bboxes_origin_np[:, 0::2] = origin_w - cp_bboxes_origin_np[:, 0::2]
+            cp_bboxes_transformed_np = cp_bboxes_origin_np.copy()
+            cp_bboxes_transformed_np[:, 0::2] = np.clip(
+                cp_bboxes_transformed_np[:, 0::2] - x_offset, 0, target_w
+            )
+            cp_bboxes_transformed_np[:, 1::2] = np.clip(
+                cp_bboxes_transformed_np[:, 1::2] - y_offset, 0, target_h
+            )
+            cls_labels = cp_labels[:, 8:9].copy()
+        else:
+            cp_bboxes_origin_np = adjust_box_anns(
+                cp_labels[:, :4].copy(), cp_scale_ratio, 0, 0, origin_w, origin_h
+            )
+            if FLIP:
+                cp_bboxes_origin_np[:, 0::2] = (
+                    origin_w - cp_bboxes_origin_np[:, 0::2][:, ::-1]
+                )
+            cp_bboxes_transformed_np = cp_bboxes_origin_np.copy()
+            cp_bboxes_transformed_np[:, 0::2] = np.clip(
+                cp_bboxes_transformed_np[:, 0::2] - x_offset, 0, target_w
+            )
+            cp_bboxes_transformed_np[:, 1::2] = np.clip(
+                cp_bboxes_transformed_np[:, 1::2] - y_offset, 0, target_h
+            )
+            cls_labels = cp_labels[:, 4:5].copy()
 
-        cls_labels = cp_labels[:, 4:5].copy()
         box_labels = cp_bboxes_transformed_np
         labels = np.hstack((box_labels, cls_labels))
         origin_labels = np.vstack((origin_labels, labels))

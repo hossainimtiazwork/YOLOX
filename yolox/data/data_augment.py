@@ -139,6 +139,23 @@ def _mirror(image, boxes, prob=0.5):
     return image, boxes
 
 
+def _mirror_polygon(image, boxes, prob=0.5):
+    """
+    Mirror image and polygon boxes.
+
+    Args:
+        image: HWC image
+        boxes: polygon boxes with shape (N, 8) - 4 points
+        prob: probability of mirroring
+    """
+    _, width, _ = image.shape
+    if random.random() < prob:
+        image = image[:, ::-1]
+        # Mirror all x coordinates
+        boxes[:, 0::2] = width - boxes[:, 0::2]
+    return image, boxes
+
+
 def preproc(img, input_size, swap=(2, 0, 1)):
     if len(img.shape) == 3:
         padded_img = np.ones((input_size[0], input_size[1], 3), dtype=np.uint8) * 114
@@ -159,12 +176,24 @@ def preproc(img, input_size, swap=(2, 0, 1)):
 
 
 class TrainTransform:
-    def __init__(self, max_labels=50, flip_prob=0.5, hsv_prob=1.0):
+    def __init__(self, max_labels=50, flip_prob=0.5, hsv_prob=1.0, use_polygon=False):
         self.max_labels = max_labels
         self.flip_prob = flip_prob
         self.hsv_prob = hsv_prob
+        self.use_polygon = use_polygon
+        # Number of box coordinates: 8 for polygon, 4 for standard
+        self.box_coords = 8 if use_polygon else 4
+        # Total label size: class + box coords
+        self.label_size = 1 + self.box_coords  # 9 for polygon, 5 for standard
 
     def __call__(self, image, targets, input_dim):
+        if self.use_polygon:
+            return self._call_polygon(image, targets, input_dim)
+        else:
+            return self._call_standard(image, targets, input_dim)
+
+    def _call_standard(self, image, targets, input_dim):
+        """Original standard bounding box transform."""
         boxes = targets[:, :4].copy()
         labels = targets[:, 4].copy()
         if len(boxes) == 0:
@@ -203,6 +232,56 @@ class TrainTransform:
 
         targets_t = np.hstack((labels_t, boxes_t))
         padded_labels = np.zeros((self.max_labels, 5))
+        padded_labels[range(len(targets_t))[: self.max_labels]] = targets_t[
+            : self.max_labels
+        ]
+        padded_labels = np.ascontiguousarray(padded_labels, dtype=np.float32)
+        return image_t, padded_labels
+
+    def _call_polygon(self, image, targets, input_dim):
+        """Polygon bounding box transform (8 coordinates)."""
+        boxes = targets[:, :8].copy()  # 8 polygon coordinates
+        labels = targets[:, 8].copy()  # class label at index 8
+
+        if len(boxes) == 0:
+            targets = np.zeros((self.max_labels, 9), dtype=np.float32)
+            image, r_o = preproc(image, input_dim)
+            return image, targets
+
+        image_o = image.copy()
+        targets_o = targets.copy()
+        boxes_o = targets_o[:, :8].copy()
+        labels_o = targets_o[:, 8].copy()
+
+        if random.random() < self.hsv_prob:
+            augment_hsv(image)
+
+        image_t, boxes = _mirror_polygon(image, boxes, self.flip_prob)
+        height, width, _ = image_t.shape
+        image_t, r_ = preproc(image_t, input_dim)
+
+        # Scale all coordinates
+        boxes *= r_
+
+        # Filter small polygons by computing bounding box area
+        x_coords = boxes[:, 0::2]  # x1, x2, x3, x4
+        y_coords = boxes[:, 1::2]  # y1, y2, y3, y4
+        widths = x_coords.max(axis=1) - x_coords.min(axis=1)
+        heights = y_coords.max(axis=1) - y_coords.min(axis=1)
+        mask_b = np.minimum(widths, heights) > 1
+        boxes_t = boxes[mask_b]
+        labels_t = labels[mask_b]
+
+        if len(boxes_t) == 0:
+            image_t, r_o = preproc(image_o, input_dim)
+            boxes_o *= r_o
+            boxes_t = boxes_o
+            labels_t = labels_o
+
+        labels_t = np.expand_dims(labels_t, 1)
+
+        targets_t = np.hstack((labels_t, boxes_t))  # class + 8 coords = 9
+        padded_labels = np.zeros((self.max_labels, 9))
         padded_labels[range(len(targets_t))[: self.max_labels]] = targets_t[
             : self.max_labels
         ]
