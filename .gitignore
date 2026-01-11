@@ -6,6 +6,7 @@ YOLOX_outputs/
 datasets/
 # do not ignore datasets under yolox/data
 !*yolox/data/datasets/
+!datasets/Thermal Cheetah.v1-square.coco/
 
 # temporary files which can be created if a process still has a handle open of a deleted file
 .fuse_hidden*
