@@ -176,15 +176,16 @@ def preproc(img, input_size, swap=(2, 0, 1)):
 
 
 class TrainTransform:
+    # Number of polygon points (4 corners)
+    NUM_POLYGON_POINTS = 4
+
     def __init__(self, max_labels=50, flip_prob=0.5, hsv_prob=1.0, use_polygon=False):
         self.max_labels = max_labels
         self.flip_prob = flip_prob
         self.hsv_prob = hsv_prob
         self.use_polygon = use_polygon
-        # Number of box coordinates: 8 for polygon, 4 for standard
-        self.box_coords = 8 if use_polygon else 4
-        # Total label size: class + box coords
-        self.label_size = 1 + self.box_coords  # 9 for polygon, 5 for standard
+        # Number of box coordinates: 8 for polygon (4 points x 2 coords), 4 for standard
+        self.box_coords = 2 * self.NUM_POLYGON_POINTS if use_polygon else 4
 
     def __call__(self, image, targets, input_dim):
         if self.use_polygon:

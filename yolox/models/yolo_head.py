@@ -310,7 +310,11 @@ class YOLOXHead(nn.Module):
         num_gts = 0.0
 
         # Determine label box range based on mode
-        label_box_end = 1 + reg_ch  # class is at index 0, boxes at 1:1+reg_ch
+        # Label structure: [class, box_coords...] where class is at index 0,
+        # and box coordinates are at indices 1:(1+reg_ch)
+        # - Standard mode (reg_ch=4): label shape is (N, 5) = [class, cx, cy, w, h]
+        # - Polygon mode (reg_ch=8): label shape is (N, 9) = [class, x1, y1, x2, y2, x3, y3, x4, y4]
+        label_box_end = 1 + reg_ch
 
         for batch_idx in range(outputs.shape[0]):
             num_gt = int(nlabel[batch_idx])

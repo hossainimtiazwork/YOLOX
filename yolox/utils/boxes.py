@@ -6,6 +6,9 @@ import numpy as np
 import torch
 import torchvision
 
+# Epsilon for floating point comparisons
+POLYGON_EPS = 1e-10
+
 __all__ = [
     "filter_box",
     "postprocess",
@@ -193,7 +196,7 @@ def _line_intersection(p1, p2, p3, p4):
     x4, y4 = p4[0], p4[1]
 
     denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
-    if torch.abs(denom) < 1e-10:
+    if torch.abs(denom) < POLYGON_EPS:
         return p1  # Lines are parallel, return p1 as fallback
 
     t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom
@@ -292,7 +295,7 @@ def polygon_iou(poly1, poly2):
     area1 = polygon_area(poly1)
     area2 = polygon_area(poly2)
 
-    if area1 < 1e-10 or area2 < 1e-10:
+    if area1 < POLYGON_EPS or area2 < POLYGON_EPS:
         return torch.tensor(0.0, device=poly1.device, dtype=poly1.dtype)
 
     # Clip poly1 by poly2 to get intersection
@@ -304,7 +307,7 @@ def polygon_iou(poly1, poly2):
     intersection_area = polygon_area(intersection_polygon)
     union_area = area1 + area2 - intersection_area
 
-    if union_area < 1e-10:
+    if union_area < POLYGON_EPS:
         return torch.tensor(0.0, device=poly1.device, dtype=poly1.dtype)
 
     iou = intersection_area / union_area

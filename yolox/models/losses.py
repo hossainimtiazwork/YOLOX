@@ -59,6 +59,10 @@ class PolygonIOULoss(nn.Module):
     """
     IoU loss for 4-point polygon bounding boxes.
     Uses Sutherland-Hodgman algorithm for polygon intersection.
+
+    The loss formula is `1 - IoU^2` (squared IoU), which is consistent with
+    the standard YOLOX IOUloss implementation. The squared variant provides
+    stronger gradients for high IoU values, encouraging more precise localization.
     """
 
     def __init__(self, reduction="none"):
@@ -67,7 +71,10 @@ class PolygonIOULoss(nn.Module):
 
     def forward(self, pred, target):
         """
-        Compute polygon IoU loss.
+        Compute polygon IoU loss using the formula: loss = 1 - IoU^2
+
+        The squared IoU loss provides stronger gradients for high IoU predictions,
+        which helps achieve more precise localization.
 
         Args:
             pred: tensor of shape (N, 8) - predicted polygons (x1,y1,x2,y2,x3,y3,x4,y4)

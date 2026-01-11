@@ -37,6 +37,9 @@ def get_mosaic_coordinate(mosaic_image, mosaic_index, xc, yc, w, h, input_h, inp
 class MosaicDetection(Dataset):
     """Detection dataset wrapper that performs mixup for normal dataset."""
 
+    # Number of polygon points (4 corners)
+    NUM_POLYGON_POINTS = 4
+
     def __init__(
         self, dataset, img_size, mosaic=True, preproc=None,
         degrees=10.0, translate=0.1, mosaic_scale=(0.5, 1.5),
@@ -73,8 +76,8 @@ class MosaicDetection(Dataset):
         self.mixup_prob = mixup_prob
         self.local_rank = get_local_rank()
         self.use_polygon = use_polygon
-        # Number of box coordinates: 8 for polygon, 4 for standard
-        self.box_coords = 8 if use_polygon else 4
+        # Number of box coordinates: 8 for polygon (4 points x 2 coords), 4 for standard
+        self.box_coords = 2 * self.NUM_POLYGON_POINTS if use_polygon else 4
 
     def __len__(self):
         return len(self._dataset)
@@ -194,6 +197,10 @@ class MosaicDetection(Dataset):
         """
         Apply random affine transformation for polygon annotations.
         For simplicity, we only apply scaling and translation (no rotation/shear).
+
+        Args:
+            targets: shape (N, 9) where columns are [x1, y1, x2, y2, x3, y3, x4, y4, class]
+                    (8 polygon coordinates followed by class label at index 8)
         """
         from ..data_augment import get_affine_matrix
 
@@ -202,8 +209,7 @@ class MosaicDetection(Dataset):
 
         if len(targets) > 0:
             num_gts = len(targets)
-            # Transform all 4 points
-            # targets has shape (N, 8 + class) where 8 is polygon coords
+            # Transform all 4 polygon points (indices 0-7, class is at index 8)
             points = np.ones((num_gts * 4, 3))
             for i in range(4):
                 points[i*num_gts:(i+1)*num_gts, 0] = targets[:, 2*i]  # x
