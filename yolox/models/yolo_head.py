@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 # Copyright (c) Megvii Inc. All rights reserved.
 
+import contextlib
 import math
 from loguru import logger
 
@@ -512,7 +513,10 @@ class YOLOXHead(nn.Module):
         if mode == "cpu":
             cls_preds_, obj_preds_ = cls_preds_.cpu(), obj_preds_.cpu()
 
-        with torch.cuda.amp.autocast(enabled=False):
+        autocast_enabled = torch.cuda.is_available()
+        # Fallback for CPU-only environments where torch.cuda.amp might fail
+        context_manager = torch.cuda.amp.autocast(enabled=False) if autocast_enabled else contextlib.nullcontext()
+        with context_manager:
             cls_preds_ = (
                 cls_preds_.float().sigmoid_() * obj_preds_.float().sigmoid_()
             ).sqrt()

@@ -10,6 +10,7 @@ This is useful when doing distributed training.
 """
 
 import functools
+import contextlib
 import os
 import pickle
 import time
@@ -285,6 +286,6 @@ def shared_random_seed():
 
 def time_synchronized():
     """pytorch-accurate time"""
-    if torch.cuda.is_available():
+    if torch.cuda.is_available() and torch.cuda.is_initialized():
         torch.cuda.synchronize()
     return time.time()

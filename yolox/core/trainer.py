@@ -2,6 +2,7 @@
 # Copyright (c) Megvii, Inc. and its affiliates.
 
 import datetime
+import contextlib
 import os
 import time
 from loguru import logger
@@ -44,7 +45,10 @@ class Trainer:
         # training related attr
         self.max_epoch = exp.max_epoch
         self.amp_training = args.fp16 if torch.cuda.is_available() else False
-        self.scaler = torch.cuda.amp.GradScaler(enabled=self.amp_training)
+        if self.amp_training:
+            self.scaler = torch.cuda.amp.GradScaler(enabled=True)
+        else:
+            self.scaler = None
         self.is_distributed = get_world_size() > 1
         self.rank = get_rank()
         self.local_rank = get_local_rank()
@@ -103,7 +107,8 @@ class Trainer:
         inps, targets = self.exp.preprocess(inps, targets, self.input_size)
         data_end_time = time.time()
 
-        with torch.cuda.amp.autocast(enabled=self.amp_training):
+        context_manager = torch.cuda.amp.autocast(enabled=True) if self.amp_training else contextlib.nullcontext()
+        with context_manager:
             outputs = self.model(inps, targets)
 
         loss = outputs["total_loss"]
