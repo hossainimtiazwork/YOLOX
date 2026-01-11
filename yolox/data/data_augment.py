@@ -160,50 +160,70 @@ def preproc(img, input_size, swap=(2, 0, 1)):
 
 
 class TrainTransform:
-    def __init__(self, max_labels=50, flip_prob=0.5, hsv_prob=1.0):
+    def __init__(self, max_labels=50, flip_prob=0.5, hsv_prob=1.0, use_polygon=False):
         self.max_labels = max_labels
         self.flip_prob = flip_prob
         self.hsv_prob = hsv_prob
+        self.use_polygon = use_polygon
 
     def __call__(self, image, targets, input_dim):
-        boxes = targets[:, :4].copy()
-        labels = targets[:, 4].copy()
-        if len(boxes) == 0:
-            targets = np.zeros((self.max_labels, 5), dtype=np.float32)
+        reg_dim = 8 if self.use_polygon else 4
+        ann = targets[:, :reg_dim].copy()
+        labels = targets[:, reg_dim].copy()
+
+        if len(ann) == 0:
+            targets = np.zeros((self.max_labels, reg_dim + 1), dtype=np.float32)
             image, r_o = preproc(image, input_dim)
             return image, targets
 
         image_o = image.copy()
         targets_o = targets.copy()
         height_o, width_o, _ = image_o.shape
-        boxes_o = targets_o[:, :4]
-        labels_o = targets_o[:, 4]
-        # bbox_o: [xyxy] to [c_x,c_y,w,h]
-        boxes_o = xyxy2cxcywh(boxes_o)
+        ann_o = targets_o[:, :reg_dim]
+        labels_o = targets_o[:, reg_dim]
+
+        if self.use_polygon:
+            # Polygons are already in pixel coordinates [x1, y1, ...]
+            pass
+        else:
+            # bbox_o: [xyxy] to [c_x,c_y,w,h]
+            ann_o = xyxy2cxcywh(ann_o)
 
         if random.random() < self.hsv_prob:
             augment_hsv(image)
-        image_t, boxes = _mirror(image, boxes, self.flip_prob)
+
+        if self.use_polygon:
+            image_t, ann = _mirror_polygon(image, ann, self.flip_prob)
+        else:
+            image_t, ann = _mirror(image, ann, self.flip_prob)
+
         height, width, _ = image_t.shape
         image_t, r_ = preproc(image_t, input_dim)
-        # boxes [xyxy] 2 [cx,cy,w,h]
-        boxes = xyxy2cxcywh(boxes)
-        boxes *= r_
 
-        mask_b = np.minimum(boxes[:, 2], boxes[:, 3]) > 1
-        boxes_t = boxes[mask_b]
+        if self.use_polygon:
+            ann *= r_
+            # Filter by area
+            areas = polygon_area_np(ann)
+            mask_b = areas > 1
+        else:
+            # boxes [xyxy] 2 [cx,cy,w,h]
+            ann = xyxy2cxcywh(ann)
+            ann *= r_
+            mask_b = np.minimum(ann[:, 2], ann[:, 3]) > 1
+
+        ann_t = ann[mask_b]
         labels_t = labels[mask_b]
 
-        if len(boxes_t) == 0:
+        if len(ann_t) == 0:
             image_t, r_o = preproc(image_o, input_dim)
-            boxes_o *= r_o
-            boxes_t = boxes_o
+            ann_o *= r_o
+            ann_t = ann_o
             labels_t = labels_o
 
         labels_t = np.expand_dims(labels_t, 1)
 
-        targets_t = np.hstack((labels_t, boxes_t))
-        padded_labels = np.zeros((self.max_labels, 5))
+        targets_t = np.hstack((labels_t, ann_t))
+        padded_labels = np.zeros((self.max_labels, reg_dim + 1))
         padded_labels[range(len(targets_t))[: self.max_labels]] = targets_t[
             : self.max_labels
         ]
@@ -229,9 +249,10 @@ class ValTransform:
         data
     """
 
-    def __init__(self, swap=(2, 0, 1), legacy=False):
+    def __init__(self, swap=(2, 0, 1), legacy=False, use_polygon=False):
         self.swap = swap
         self.legacy = legacy
+        self.use_polygon = use_polygon
 
     # assume input is cv2 img for now
     def __call__(self, img, res, input_size):
@@ -241,7 +262,9 @@ class ValTransform:
             img /= 255.0
             img -= np.array([0.485, 0.456, 0.406]).reshape(3, 1, 1)
             img /= np.array([0.229, 0.224, 0.225]).reshape(3, 1, 1)
-        return img, np.zeros((1, 5))
+        
+        reg_dim = 8 if self.use_polygon else 4
+        return img, np.zeros((1, reg_dim + 1))
 
 
 # ===================== Polygon Bounding Box Augmentations =====================
