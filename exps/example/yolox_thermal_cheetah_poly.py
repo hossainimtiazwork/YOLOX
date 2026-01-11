@@ -34,3 +34,36 @@ class Exp(MyExp):
         self.eval_interval = 5
         self.input_size = (640, 640)
         self.test_size = (640, 640)
+
+    def get_dataset(self, cache: bool = False, cache_type: str = "ram"):
+        from yolox.data import COCODataset, TrainTransform
+
+        return COCODataset(
+            data_dir=self.data_dir,
+            json_file=self.train_ann,
+            name=self.train_name,
+            img_size=self.input_size,
+            preproc=TrainTransform(
+                max_labels=50,
+                flip_prob=self.flip_prob,
+                hsv_prob=self.hsv_prob,
+                use_polygon=self.use_polygon,
+            ),
+            cache=cache,
+            cache_type=cache_type,
+            use_polygon=self.use_polygon,
+        )
+
+    def get_eval_dataset(self, **kwargs):
+        from yolox.data import COCODataset, ValTransform
+        testdev = kwargs.get("testdev", False)
+        legacy = kwargs.get("legacy", False)
+
+        return COCODataset(
+            data_dir=self.data_dir,
+            json_file=self.val_ann if not testdev else self.test_ann,
+            name=self.val_name if not testdev else self.test_name,
+            img_size=self.test_size,
+            preproc=ValTransform(legacy=legacy),
+            use_polygon=self.use_polygon,
+        )
