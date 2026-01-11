@@ -1,0 +1,266 @@
+2026-01-11 18:31:07.611 | INFO     | yolox.core.trainer:before_train:132 - args: Namespace(experiment_name='yolox_thermal_cheetah_poly', name=None, dist_backend='nccl', dist_url=None, batch_size=4, devices=0, exp_file='exps/example/yolox_thermal_cheetah_poly.py', resume=False, ckpt='yolox_s.pth', start_epoch=None, num_machines=1, machine_rank=0, fp16=True, cache=None, occupy=True, logger='tensorboard', opts=[])
+2026-01-11 18:31:07.615 | INFO     | yolox.core.trainer:before_train:133 - exp value:
+╒═══════════════════╤═══════════════════════════════════════════╕
+│ keys              │ values                                    │
+╞═══════════════════╪═══════════════════════════════════════════╡
+│ seed              │ None                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ output_dir        │ './YOLOX_outputs'                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ print_interval    │ 1                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ eval_interval     │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ dataset           │ None                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ num_classes       │ 3                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ depth             │ 0.33                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ width             │ 0.5                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ act               │ 'silu'                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ data_num_workers  │ 4                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ input_size        │ (640, 640)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ multiscale_range  │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ data_dir          │ 'datasets/Thermal Cheetah.v1-square.coco' │
+├───────────────────┼───────────────────────────────────────────┤
+│ train_ann         │ 'instances_train2017_poly.json'           │
+├───────────────────┼───────────────────────────────────────────┤
+│ val_ann           │ 'instances_val2017_poly.json'             │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_ann          │ 'instances_test2017_poly.json'            │
+├───────────────────┼───────────────────────────────────────────┤
+│ mosaic_prob       │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ mixup_prob        │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ hsv_prob          │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ flip_prob         │ 0.5                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ degrees           │ 10.0                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ translate         │ 0.1                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ mosaic_scale      │ (0.1, 2)                                  │
+├───────────────────┼───────────────────────────────────────────┤
+│ enable_mixup      │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ mixup_scale       │ (0.5, 1.5)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ shear             │ 2.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ warmup_epochs     │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ max_epoch         │ 10                                        │
+├───────────────────┼───────────────────────────────────────────┤
+│ warmup_lr         │ 0                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ min_lr_ratio      │ 0.05                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ basic_lr_per_img  │ 0.00015625                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ scheduler         │ 'yoloxwarmcos'                            │
+├───────────────────┼───────────────────────────────────────────┤
+│ no_aug_epochs     │ 15                                        │
+├───────────────────┼───────────────────────────────────────────┤
+│ ema               │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ weight_decay      │ 0.0005                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ momentum          │ 0.9                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ save_history_ckpt │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ exp_name          │ 'yolox_thermal_cheetah_poly'              │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_size         │ (640, 640)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_conf         │ 0.01                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ nmsthre           │ 0.65                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ use_polygon       │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ train_name        │ 'train'                                   │
+├───────────────────┼───────────────────────────────────────────┤
+│ val_name          │ 'valid'                                   │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_name         │ 'test'                                    │
+╘═══════════════════╧═══════════════════════════════════════════╛
+2026-01-11 18:31:07.617 | ERROR    | yolox.core.launch:launch:98 - An error has been caught in function 'launch', process 'MainProcess' (30260), thread 'MainThread' (27472):
+Traceback (most recent call last):
+
+  File "D:\YOLOX\tools\train.py", line 138, in <module>
+    launch(
+    └ <function launch at 0x000001D66C590220>
+
+> File "D:\YOLOX\yolox\core\launch.py", line 98, in launch
+    main_func(*args)
+    │          └ (╒═══════════════════╤═══════════════════════════════════════════╕
+    │            │ keys              │ values                              ...
+    └ <function main at 0x000001D66C4FA200>
+
+  File "D:\YOLOX\tools\train.py", line 118, in main
+    trainer.train()
+    │       └ <function Trainer.train at 0x000001D67018E7A0>
+    └ <yolox.core.trainer.Trainer object at 0x000001D67089D1D0>
+
+  File "D:\YOLOX\yolox\core\trainer.py", line 75, in train
+    self.before_train()
+    │    └ <function Trainer.before_train at 0x000001D671973880>
+    └ <yolox.core.trainer.Trainer object at 0x000001D67089D1D0>
+
+  File "D:\YOLOX\yolox\core\trainer.py", line 136, in before_train
+    torch.cuda.set_device(self.local_rank)
+    │     │    │          │    └ 0
+    │     │    │          └ <yolox.core.trainer.Trainer object at 0x000001D67089D1D0>
+    │     │    └ <function set_device at 0x000001D6681E9C60>
+    │     └ <module 'torch.cuda' from 'C:\\Users\\strid\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\torch\\cuda\\__...
+    └ <module 'torch' from 'C:\\Users\\strid\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\torch\\__init__.py'>
+
+  File "C:\Users\strid\AppData\Local\Programs\Python\Python311\Lib\site-packages\torch\cuda\__init__.py", line 567, in set_device
+    torch._C._cuda_setDevice(device)
+    │     │                  └ 0
+    │     └ <module 'torch._C' from 'C:\\Users\\strid\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\torch\\_C.cp311-w...
+    └ <module 'torch' from 'C:\\Users\\strid\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\torch\\__init__.py'>
+
+AttributeError: module 'torch._C' has no attribute '_cuda_setDevice'
+2026-01-11 18:31:33.674 | INFO     | yolox.core.trainer:before_train:132 - args: Namespace(experiment_name='yolox_thermal_cheetah_poly', name=None, dist_backend='nccl', dist_url=None, batch_size=4, devices=0, exp_file='exps/example/yolox_thermal_cheetah_poly.py', resume=False, ckpt='yolox_s.pth', start_epoch=None, num_machines=1, machine_rank=0, fp16=True, cache=None, occupy=True, logger='tensorboard', opts=[])
+2026-01-11 18:31:33.678 | INFO     | yolox.core.trainer:before_train:133 - exp value:
+╒═══════════════════╤═══════════════════════════════════════════╕
+│ keys              │ values                                    │
+╞═══════════════════╪═══════════════════════════════════════════╡
+│ seed              │ None                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ output_dir        │ './YOLOX_outputs'                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ print_interval    │ 1                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ eval_interval     │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ dataset           │ None                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ num_classes       │ 3                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ depth             │ 0.33                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ width             │ 0.5                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ act               │ 'silu'                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ data_num_workers  │ 4                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ input_size        │ (640, 640)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ multiscale_range  │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ data_dir          │ 'datasets/Thermal Cheetah.v1-square.coco' │
+├───────────────────┼───────────────────────────────────────────┤
+│ train_ann         │ 'instances_train2017_poly.json'           │
+├───────────────────┼───────────────────────────────────────────┤
+│ val_ann           │ 'instances_val2017_poly.json'             │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_ann          │ 'instances_test2017_poly.json'            │
+├───────────────────┼───────────────────────────────────────────┤
+│ mosaic_prob       │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ mixup_prob        │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ hsv_prob          │ 1.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ flip_prob         │ 0.5                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ degrees           │ 10.0                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ translate         │ 0.1                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ mosaic_scale      │ (0.1, 2)                                  │
+├───────────────────┼───────────────────────────────────────────┤
+│ enable_mixup      │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ mixup_scale       │ (0.5, 1.5)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ shear             │ 2.0                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ warmup_epochs     │ 5                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ max_epoch         │ 10                                        │
+├───────────────────┼───────────────────────────────────────────┤
+│ warmup_lr         │ 0                                         │
+├───────────────────┼───────────────────────────────────────────┤
+│ min_lr_ratio      │ 0.05                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ basic_lr_per_img  │ 0.00015625                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ scheduler         │ 'yoloxwarmcos'                            │
+├───────────────────┼───────────────────────────────────────────┤
+│ no_aug_epochs     │ 15                                        │
+├───────────────────┼───────────────────────────────────────────┤
+│ ema               │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ weight_decay      │ 0.0005                                    │
+├───────────────────┼───────────────────────────────────────────┤
+│ momentum          │ 0.9                                       │
+├───────────────────┼───────────────────────────────────────────┤
+│ save_history_ckpt │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ exp_name          │ 'yolox_thermal_cheetah_poly'              │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_size         │ (640, 640)                                │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_conf         │ 0.01                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ nmsthre           │ 0.65                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ use_polygon       │ True                                      │
+├───────────────────┼───────────────────────────────────────────┤
+│ train_name        │ 'train'                                   │
+├───────────────────┼───────────────────────────────────────────┤
+│ val_name          │ 'valid'                                   │
+├───────────────────┼───────────────────────────────────────────┤
+│ test_name         │ 'test'                                    │
+╘═══════════════════╧═══════════════════════════════════════════╛
+2026-01-11 18:31:33.680 | ERROR    | yolox.core.launch:launch:98 - An error has been caught in function 'launch', process 'MainProcess' (25240), thread 'MainThread' (29688):
+Traceback (most recent call last):
+
+  File "D:\YOLOX\tools\train.py", line 138, in <module>
+    launch(
+    └ <function launch at 0x000001A3970A9D00>
+
+> File "D:\YOLOX\yolox\core\launch.py", line 98, in launch
+    main_func(*args)
+    │          └ (╒═══════════════════╤═══════════════════════════════════════════╕
+    │            │ keys              │ values                              ...
+    └ <function main at 0x000001A3970AA520>
+
+  File "D:\YOLOX\tools\train.py", line 118, in main
+    trainer.train()
+    │       └ <function Trainer.train at 0x000001A39AD8CF40>
+    └ <yolox.core.trainer.Trainer object at 0x000001A39ACCB210>
+
+  File "D:\YOLOX\yolox\core\trainer.py", line 75, in train
+    self.before_train()
+    │    └ <function Trainer.before_train at 0x000001A39B531D00>
+    └ <yolox.core.trainer.Trainer object at 0x000001A39ACCB210>
+
+  File "D:\YOLOX\yolox\core\trainer.py", line 136, in before_train
+    torch.cuda.set_device(self.local_rank)
+    │     │    │          │    └ 0
+    │     │    │          └ <yolox.core.trainer.Trainer object at 0x000001A39ACCB210>
+    │     │    └ <function set_device at 0x000001A392DD1C60>
+    │     └ <module 'torch.cuda' from 'C:\\Users\\strid\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\torch\\cuda\\__...
+    └ <module 'torch' from 'C:\\Users\\strid\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\torch\\__init__.py'>
+
+  File "C:\Users\strid\AppData\Local\Programs\Python\Python311\Lib\site-packages\torch\cuda\__init__.py", line 567, in set_device
+    torch._C._cuda_setDevice(device)
+    │     │                  └ 0
+    │     └ <module 'torch._C' from 'C:\\Users\\strid\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\torch\\_C.cp311-w...
+    └ <module 'torch' from 'C:\\Users\\strid\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\torch\\__init__.py'>
+
+AttributeError: module 'torch._C' has no attribute '_cuda_setDevice'
