@@ -23,8 +23,36 @@ __all__ = [
     "polygon_iou",
     "polygon_iou_batch",
     "polygon_nms",
+    "polygon_nms",
     "postprocess_polygon",
+    "order_vertices_torch",
 ]
+
+
+def order_vertices_torch(polys):
+    """
+    polys: (N, 8) or (N, 4, 2)
+    Returns ordered (N, 8)
+    """
+    # device = polys.device
+    if polys.dim() == 2 and polys.shape[1] == 8:
+        polys = polys.view(-1, 4, 2)
+
+    # calc centroid
+    center = torch.mean(polys, dim=1, keepdim=True) # (N, 1, 2)
+
+    # calc angles
+    diff = polys - center
+    angles = torch.atan2(diff[..., 1], diff[..., 0]) # (N, 4)
+
+    # sort
+    _, indices = torch.sort(angles, dim=1) # (N, 4)
+
+    # gather
+    indices = indices.unsqueeze(-1).expand(-1, -1, 2) # (N, 4, 2)
+    sorted_polys = torch.gather(polys, 1, indices)
+
+    return sorted_polys.view(-1, 8)
 
 
 def filter_box(output, scale_range):
@@ -423,6 +451,7 @@ def postprocess_polygon(
         scores = detections[:, 8] * detections[:, 9]
 
         if class_agnostic:
+            polygons = order_vertices_torch(polygons) 
             nms_out_index = polygon_nms(polygons, scores, nms_thre)
         else:
             # Batched NMS per class
@@ -434,6 +463,8 @@ def postprocess_polygon(
                 cls_polygons = polygons[cls_mask]
                 cls_scores = scores[cls_mask]
                 cls_indices = torch.where(cls_mask)[0]
+                # Enforce ordering before NMS
+                cls_polygons = order_vertices_torch(cls_polygons)
                 cls_keep = polygon_nms(cls_polygons, cls_scores, nms_thre)
                 nms_out_indices.append(cls_indices[cls_keep])
             if len(nms_out_indices) > 0:
