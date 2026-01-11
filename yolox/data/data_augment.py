@@ -87,8 +87,8 @@ def apply_affine_to_bboxes(targets, target_size, M, scale):
         # Polygon format - directly transform all 4 points
         twidth, theight = target_size
         corner_points = np.ones((4 * num_gts, 3))
-        # Extract all 4 polygon points (x1,y1,x2,y2,x3,y3,x4,y4)
-        corner_points[:, :2] = targets[:, [0, 1, 2, 3, 4, 5, 6, 7]].reshape(4 * num_gts, 2)
+        # Extract all 4 polygon points (x1,y1,x2,y2,x3,y3,x4,y4) - skip class at index 0
+        corner_points[:, :2] = targets[:, 1:9].reshape(4 * num_gts, 2)
         corner_points = corner_points @ M.T  # apply affine transform
         corner_points = corner_points.reshape(num_gts, 8)
         
@@ -96,7 +96,7 @@ def apply_affine_to_bboxes(targets, target_size, M, scale):
         corner_points[:, 0::2] = corner_points[:, 0::2].clip(0, twidth)
         corner_points[:, 1::2] = corner_points[:, 1::2].clip(0, theight)
         
-        targets[:, :8] = corner_points
+        targets[:, 1:9] = corner_points
     else:
         # Original bbox format
         # warp corner points
