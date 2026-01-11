@@ -30,7 +30,7 @@ def test_polygon_area():
     area = polygon_area(square)
     expected = 4.0
     assert abs(area.item() - expected) < 1e-5, f"Square area: expected {expected}, got {area.item()}"
-    print(f"✓ Square area test passed: {area.item():.4f}")
+    print(f"[PASS] Square area test passed: {area.item():.4f}")
 
     # Test with a triangle (base 4, height 3, area should be 6)
     triangle = torch.tensor([
@@ -41,7 +41,7 @@ def test_polygon_area():
     area = polygon_area(triangle)
     expected = 6.0
     assert abs(area.item() - expected) < 1e-5, f"Triangle area: expected {expected}, got {area.item()}"
-    print(f"✓ Triangle area test passed: {area.item():.4f}")
+    print(f"[PASS] Triangle area test passed: {area.item():.4f}")
 
     # Test with a rectangle (3x4, area should be 12)
     rectangle = torch.tensor([
@@ -53,7 +53,7 @@ def test_polygon_area():
     area = polygon_area(rectangle)
     expected = 12.0
     assert abs(area.item() - expected) < 1e-5, f"Rectangle area: expected {expected}, got {area.item()}"
-    print(f"✓ Rectangle area test passed: {area.item():.4f}")
+    print(f"[PASS] Rectangle area test passed: {area.item():.4f}")
 
 
 def test_sutherland_hodgman():
@@ -203,7 +203,7 @@ def test_polygon_iou_loss():
     loss = loss_fn(pred, target)
     expected = 0.0  # 1 - 1^2 = 0
     assert abs(loss.item() - expected) < 1e-5, f"Identical polygons loss: expected {expected}, got {loss.item()}"
-    print(f"✓ PolygonIOULoss with identical polygons: {loss.item():.6f}")
+    print(f"[PASS] PolygonIOULoss with identical polygons: {loss.item():.6f}")
 
     # Test with non-overlapping polygons (loss should be 1 since IoU=0)
     pred = torch.tensor([[0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]])
@@ -212,7 +212,7 @@ def test_polygon_iou_loss():
     loss = loss_fn(pred, target)
     expected = 1.0  # 1 - 0^2 = 1
     assert abs(loss.item() - expected) < 1e-5, f"Non-overlapping polygons loss: expected {expected}, got {loss.item()}"
-    print(f"✓ PolygonIOULoss with non-overlapping polygons: {loss.item():.6f}")
+    print(f"[PASS] PolygonIOULoss with non-overlapping polygons: {loss.item():.6f}")
 
 
 def test_yolox_head_polygon():
@@ -222,12 +222,12 @@ def test_yolox_head_polygon():
     # Create head in standard mode
     head_standard = YOLOXHead(num_classes=80, width=0.5, use_polygon=False)
     assert head_standard.reg_channels == 4, "Standard mode should have 4 reg channels"
-    print(f"✓ Standard mode head has {head_standard.reg_channels} regression channels")
+    print(f"[PASS] Standard mode head has {head_standard.reg_channels} regression channels")
 
     # Create head in polygon mode
     head_polygon = YOLOXHead(num_classes=80, width=0.5, use_polygon=True)
     assert head_polygon.reg_channels == 8, "Polygon mode should have 8 reg channels"
-    print(f"✓ Polygon mode head has {head_polygon.reg_channels} regression channels")
+    print(f"[PASS] Polygon mode head has {head_polygon.reg_channels} regression channels")
 
     # Test forward pass shapes
     batch_size = 2
@@ -247,7 +247,7 @@ def test_yolox_head_polygon():
     expected_channels = 8 + 1 + 80  # polygon coords + obj + classes
     assert outputs.shape[2] == expected_channels, \
         f"Polygon output channels: expected {expected_channels}, got {outputs.shape[2]}"
-    print(f"✓ Polygon mode output shape: {outputs.shape}")
+    print(f"[PASS] Polygon mode output shape: {outputs.shape}")
 
 
 def test_backward_compatibility():
@@ -257,7 +257,7 @@ def test_backward_compatibility():
     # Standard mode should still use IOUloss
     head = YOLOXHead(num_classes=80, width=0.5, use_polygon=False)
     assert isinstance(head.iou_loss, IOUloss), "Standard mode should use IOUloss"
-    print(f"✓ Standard mode uses IOUloss")
+    print(f"[PASS] Standard mode uses IOUloss")
 
     # Test standard box IoU still works
     from yolox.utils import bboxes_iou
@@ -265,7 +265,7 @@ def test_backward_compatibility():
     boxes_b = torch.tensor([[100.0, 100.0, 50.0, 50.0]])  # same box
     iou = bboxes_iou(boxes_a, boxes_b, xyxy=False)
     assert abs(iou[0, 0].item() - 1.0) < 1e-5, "Identical boxes should have IoU=1"
-    print(f"✓ Standard bboxes_iou still works: {iou[0, 0].item():.4f}")
+    print(f"[PASS] Standard bboxes_iou still works: {iou[0, 0].item():.4f}")
 
 
 def main():
