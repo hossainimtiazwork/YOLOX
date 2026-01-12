@@ -7,9 +7,9 @@ import random
 import cv2
 import numpy as np
 
-from yolox.utils import adjust_box_anns, get_local_rank
+from yolox.utils import adjust_box_anns, adjust_polygon_anns, get_local_rank
 
-from ..data_augment import random_affine
+from ..data_augment import random_affine, random_affine_polygon
 from .datasets_wrapper import Dataset
 
 
@@ -41,7 +41,7 @@ class MosaicDetection(Dataset):
         self, dataset, img_size, mosaic=True, preproc=None,
         degrees=10.0, translate=0.1, mosaic_scale=(0.5, 1.5),
         mixup_scale=(0.5, 1.5), shear=2.0, enable_mixup=True,
-        mosaic_prob=1.0, mixup_prob=1.0, *args
+        mosaic_prob=1.0, mixup_prob=1.0, use_polygon=False, *args
     ):
         """
 
@@ -56,6 +56,7 @@ class MosaicDetection(Dataset):
             mixup_scale (tuple):
             shear (float):
             enable_mixup (bool):
+            use_polygon (bool): whether support polygon bounding box. Default value: False.
             *args(tuple) : Additional arguments for mixup random sampler.
         """
         super().__init__(img_size, mosaic=mosaic)
@@ -70,6 +71,7 @@ class MosaicDetection(Dataset):
         self.enable_mixup = enable_mixup
         self.mosaic_prob = mosaic_prob
         self.mixup_prob = mixup_prob
+        self.use_polygon = use_polygon
         self.local_rank = get_local_rank()
 
     def __len__(self):
@@ -110,30 +112,53 @@ class MosaicDetection(Dataset):
                 padw, padh = l_x1 - s_x1, l_y1 - s_y1
 
                 labels = _labels.copy()
-                # Normalized xywh to pixel xyxy format
                 if _labels.size > 0:
-                    labels[:, 0] = scale * _labels[:, 0] + padw
-                    labels[:, 1] = scale * _labels[:, 1] + padh
-                    labels[:, 2] = scale * _labels[:, 2] + padw
-                    labels[:, 3] = scale * _labels[:, 3] + padh
+                    if self.use_polygon:
+                        # Transform all 8 polygon coordinates (4 points)
+                        for i in range(4):
+                            labels[:, i*2] = scale * _labels[:, i*2] + padw
+                            labels[:, i*2+1] = scale * _labels[:, i*2+1] + padh
+                    else:
+                        # Normalized xywh to pixel xyxy format
+                        labels[:, 0] = scale * _labels[:, 0] + padw
+                        labels[:, 1] = scale * _labels[:, 1] + padh
+                        labels[:, 2] = scale * _labels[:, 2] + padw
+                        labels[:, 3] = scale * _labels[:, 3] + padh
                 mosaic_labels.append(labels)
 
             if len(mosaic_labels):
                 mosaic_labels = np.concatenate(mosaic_labels, 0)
-                np.clip(mosaic_labels[:, 0], 0, 2 * input_w, out=mosaic_labels[:, 0])
-                np.clip(mosaic_labels[:, 1], 0, 2 * input_h, out=mosaic_labels[:, 1])
-                np.clip(mosaic_labels[:, 2], 0, 2 * input_w, out=mosaic_labels[:, 2])
-                np.clip(mosaic_labels[:, 3], 0, 2 * input_h, out=mosaic_labels[:, 3])
+                if self.use_polygon:
+                    # Clip all 8 coordinates
+                    for i in range(4):
+                        np.clip(mosaic_labels[:, i*2], 0, 2 * input_w, out=mosaic_labels[:, i*2])
+                        np.clip(mosaic_labels[:, i*2+1], 0, 2 * input_h, out=mosaic_labels[:, i*2+1])
+                else:
+                    np.clip(mosaic_labels[:, 0], 0, 2 * input_w, out=mosaic_labels[:, 0])
+                    np.clip(mosaic_labels[:, 1], 0, 2 * input_h, out=mosaic_labels[:, 1])
+                    np.clip(mosaic_labels[:, 2], 0, 2 * input_w, out=mosaic_labels[:, 2])
+                    np.clip(mosaic_labels[:, 3], 0, 2 * input_h, out=mosaic_labels[:, 3])
 
-            mosaic_img, mosaic_labels = random_affine(
-                mosaic_img,
-                mosaic_labels,
-                target_size=(input_w, input_h),
-                degrees=self.degrees,
-                translate=self.translate,
-                scales=self.scale,
-                shear=self.shear,
-            )
+            if self.use_polygon:
+                mosaic_img, mosaic_labels = random_affine_polygon(
+                    mosaic_img,
+                    mosaic_labels,
+                    target_size=(input_w, input_h),
+                    degrees=self.degrees,
+                    translate=self.translate,
+                    scales=self.scale,
+                    shear=self.shear,
+                )
+            else:
+                mosaic_img, mosaic_labels = random_affine(
+                    mosaic_img,
+                    mosaic_labels,
+                    target_size=(input_w, input_h),
+                    degrees=self.degrees,
+                    translate=self.translate,
+                    scales=self.scale,
+                    shear=self.shear,
+                )
 
             # -----------------------------------------------------------------
             # CopyPaste: https://arxiv.org/abs/2012.07177
@@ -209,26 +234,47 @@ class MosaicDetection(Dataset):
             y_offset: y_offset + target_h, x_offset: x_offset + target_w
         ]
 
-        cp_bboxes_origin_np = adjust_box_anns(
-            cp_labels[:, :4].copy(), cp_scale_ratio, 0, 0, origin_w, origin_h
-        )
-        if FLIP:
-            cp_bboxes_origin_np[:, 0::2] = (
-                origin_w - cp_bboxes_origin_np[:, 0::2][:, ::-1]
+        if self.use_polygon:
+            # Adjust polygon annotations
+            cp_ann_origin = adjust_polygon_anns(
+                cp_labels[:, :8].copy(), cp_scale_ratio, 0, 0, origin_w, origin_h
             )
-        cp_bboxes_transformed_np = cp_bboxes_origin_np.copy()
-        cp_bboxes_transformed_np[:, 0::2] = np.clip(
-            cp_bboxes_transformed_np[:, 0::2] - x_offset, 0, target_w
+            if FLIP:
+                # Mirror all x coordinates
+                cp_ann_origin[:, 0::2] = origin_w - cp_ann_origin[:, 0::2]
+                # Reorder points to maintain consistent winding order (p1<->p2, p3<->p4)
+                temp = cp_ann_origin.copy()
+                cp_ann_origin[:, 0] = temp[:, 2]
+                cp_ann_origin[:, 2] = temp[:, 0]
+                cp_ann_origin[:, 4] = temp[:, 6]
+                cp_ann_origin[:, 6] = temp[:, 4]
+            cls_labels = cp_labels[:, 8:9].copy()
+            reg_dim = 8
+        else:
+            cp_ann_origin = adjust_box_anns(
+                cp_labels[:, :4].copy(), cp_scale_ratio, 0, 0, origin_w, origin_h
+            )
+            if FLIP:
+                cp_ann_origin[:, 0::2] = (
+                    origin_w - cp_ann_origin[:, 0::2][:, ::-1]
+                )
+            cls_labels = cp_labels[:, 4:5].copy()
+            reg_dim = 4
+
+        cp_ann_transformed = cp_ann_origin.copy()
+        cp_ann_transformed[:, 0::2] = np.clip(
+            cp_ann_transformed[:, 0::2] - x_offset, 0, target_w
         )
-        cp_bboxes_transformed_np[:, 1::2] = np.clip(
-            cp_bboxes_transformed_np[:, 1::2] - y_offset, 0, target_h
+        cp_ann_transformed[:, 1::2] = np.clip(
+            cp_ann_transformed[:, 1::2] - y_offset, 0, target_h
         )
 
-        cls_labels = cp_labels[:, 4:5].copy()
-        box_labels = cp_bboxes_transformed_np
-        labels = np.hstack((box_labels, cls_labels))
+        labels = np.hstack((cp_ann_transformed, cls_labels))
         origin_labels = np.vstack((origin_labels, labels))
         origin_img = origin_img.astype(np.float32)
         origin_img = 0.5 * origin_img + 0.5 * padded_cropped_img.astype(np.float32)
 
         return origin_img.astype(np.uint8), origin_labels
+
+
+
